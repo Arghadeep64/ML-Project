@@ -156,4 +156,5 @@ try:
     # Footer
     st.markdown("<br><hr><p style='text-align: center; color: grey; font-size: 0.8rem; font-style: italic;'>Developed by: Buddhadeb, Arghadeep, Sanajit, & Kamalakanta</p>", unsafe_allow_html=True)
 
-except Exception as
+except Exception as e:
+    st.error(f"Something went wrong while loading the music: {e}")
