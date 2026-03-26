@@ -2,32 +2,47 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# --- ARTISTIC ABSTRACT UI ---
+# --- ULTRA-AESTHETIC ANIMATED UI ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
 
 st.markdown("""
     <style>
-    /* 1. THE ABSTRACT BACKGROUND DESIGN */
+    /* 1. ANIMATED MESH BACKGROUND */
+    /* This creates a moving, artistic background that adapts to Light/Dark mode */
+    @keyframes gradientMove {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
     [data-testid="stAppViewContainer"] {
-        background-color: transparent;
-        background-image: 
-            radial-gradient(circle at 10% 20%, rgba(29, 185, 84, 0.08) 0%, transparent 25%),
-            radial-gradient(circle at 85% 15%, rgba(221, 36, 118, 0.08) 0%, transparent 25%),
-            radial-gradient(circle at 50% 80%, rgba(255, 177, 153, 0.08) 0%, transparent 30%),
-            radial-gradient(rgba(128, 128, 128, 0.1) 1px, transparent 1px); 
-        background-size: 100% 100%, 100% 100%, 100% 100%, 30px 30px;
+        background: linear-gradient(-45deg, rgba(30, 60, 114, 0.05), rgba(42, 82, 152, 0.05), rgba(233, 64, 87, 0.05), rgba(242, 113, 33, 0.05));
+        background-size: 400% 400%;
+        animation: gradientMove 15s ease infinite;
         background-attachment: fixed;
     }
 
-    /* 2. SEARCH BOX STYLING */
-    .stTextInput input {
-        border-radius: 12px;
-        border: 1px solid rgba(128, 128, 128, 0.2);
-        padding: 12px;
-        background: rgba(128, 128, 128, 0.05) !important;
+    /* 2. ENTRANCE ANIMATIONS */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
-    /* 3. SLEEK COMPACT MOOD CARDS */
+    /* 3. SEARCH BOX - Soft Glass Look */
+    .stTextInput input {
+        border-radius: 15px;
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    .stTextInput input:focus {
+        border-color: #1DB954;
+        box-shadow: 0 0 10px rgba(29, 185, 84, 0.2);
+    }
+
+    /* 4. SLEEK COMPACT MOOD CARDS */
     div[role="radiogroup"] {
         display: flex;
         flex-wrap: nowrap !important;
@@ -43,51 +58,53 @@ st.markdown("""
 
     div[role="radiogroup"] label {
         flex: 1;
-        height: 50px;
+        height: 55px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
+        border-radius: 15px;
         font-weight: 700;
         font-size: 15px !important;
         color: white !important;
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         white-space: nowrap;
+        border: none !important;
     }
 
-    /* Vibrant Mood Gradients */
-    div[role="radiogroup"] label:nth-of-type(1) { background: linear-gradient(135deg, #667eea, #764ba2); } 
-    div[role="radiogroup"] label:nth-of-type(2) { background: linear-gradient(135deg, #2b5876, #4e4376); } 
-    div[role="radiogroup"] label:nth-of-type(3) { background: linear-gradient(135deg, #ff0844, #ffb199); } 
-    div[role="radiogroup"] label:nth-of-type(4) { background: linear-gradient(135deg, #0ba360, #3cba92); } 
+    /* Animated Gradients for Moods */
+    div[role="radiogroup"] label:nth-of-type(1) { background: linear-gradient(45deg, #00c6ff, #0072ff); } 
+    div[role="radiogroup"] label:nth-of-type(2) { background: linear-gradient(45deg, #3a1c71, #d76d77, #ffaf7b); } 
+    div[role="radiogroup"] label:nth-of-type(3) { background: linear-gradient(45deg, #ee9ca7, #ffdde1); color: #444 !important; } 
+    div[role="radiogroup"] label:nth-of-type(4) { background: linear-gradient(45deg, #11998e, #38ef7d); } 
 
-    /* Text Labels */
     div[role="radiogroup"] label:nth-of-type(1)::after { content: "All Songs"; }
     div[role="radiogroup"] label:nth-of-type(2)::after { content: "Sad"; }
     div[role="radiogroup"] label:nth-of-type(3)::after { content: "Romantic"; }
     div[role="radiogroup"] label:nth-of-type(4)::after { content: "Happy"; }
 
+    /* Floating Selection effect */
     div[role="radiogroup"] [data-checked="true"] + div {
-        border: 3px solid white !important;
-        transform: scale(1.05);
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        transform: translateY(-8px) scale(1.05);
+        box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+        border: 2px solid white !important;
     }
 
-    /* 4. SONG CARD DESIGN */
+    /* 5. SONG CARD DESIGN - Modern Glass */
     .song-card {
-        padding: 20px;
-        border-radius: 18px;
-        background: rgba(128, 128, 128, 0.08); 
-        backdrop-filter: blur(5px);
+        padding: 25px;
+        border-radius: 20px;
+        background: rgba(128, 128, 128, 0.05);
+        backdrop-filter: blur(12px);
         border: 1px solid rgba(128, 128, 128, 0.1);
-        margin-bottom: 12px;
+        margin-bottom: 15px;
+        animation: fadeInUp 0.6s ease backwards;
         transition: all 0.3s ease;
     }
     .song-card:hover {
-        background: rgba(128, 128, 128, 0.15);
-        transform: translateX(5px);
+        background: rgba(128, 128, 128, 0.1);
+        transform: scale(1.01);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -103,23 +120,21 @@ if 'display_count' not in st.session_state:
 col_t, col_s = st.columns([2.5, 1.5])
 with col_t:
     st.title("🎵 MoodTunes")
-    # "Intelligent" removed below
-    st.markdown("*Music Recommendation System*")
+    st.markdown("<p style='opacity: 0.7; font-style: italic;'>Your Vibe, Your Music</p>", unsafe_allow_html=True)
 
 with col_s:
     st.write("")
-    search_query = st.text_input("Search", "", placeholder="🔍 Search songs or artists...", label_visibility="collapsed")
+    search_query = st.text_input("Search", "", placeholder="🔍 Search track or artist...", label_visibility="collapsed")
 
 try:
     df = load_data()
     mood_choices = ["All Songs", "Sad", "Romantic", "Happy/Energetic"]
     
-    st.write("### ✨ Pick Your Vibe")
+    st.write("### ✨ Select Mood")
     mood_choice = st.radio("Mood:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
-    # --- FILTERING LOGIC ---
+    # --- FILTERING ---
     f_df = df.copy()
-    
     if search_query.strip():
         q = search_query.strip().lower()
         f_df = f_df[f_df['SongName'].astype(str).str.lower().str.contains(q, na=False) | 
@@ -136,33 +151,35 @@ try:
     # --- RESULTS ---
     st.write("")
     if f_df.empty:
-        st.warning("No matches found. Try clearing your search or picking a new mood!")
+        st.warning("No tracks found. Try a different search!")
     else:
         recs = f_df.reset_index(drop=True)
         show_now = min(st.session_state.display_count, len(recs))
         
-        st.write(f"Found **{len(recs)}** tracks for you")
+        st.write(f"Discovery: **{len(recs)}** songs")
         
         for i in range(show_now):
             row = recs.iloc[i]
+            # Aesthetic Song Card
             st.markdown(f"""
-                <div class="song-card">
-                    <div style="font-weight: 800; font-size: 1.2rem; margin-bottom: 2px;">{i+1}. {row['SongName']}</div>
-                    <div style="opacity: 0.6; font-size: 0.95rem; font-weight: 500;">{row['ArtistName']}</div>
+                <div class="song-card" style="animation-delay: {i*0.05}s;">
+                    <div style="font-weight: 800; font-size: 1.25rem;">{row['SongName']}</div>
+                    <div style="opacity: 0.6; font-size: 1rem; margin-bottom: 15px;">{row['ArtistName']}</div>
                 </div>
             """, unsafe_allow_html=True)
             
-            spotify_search = f"https://open.spotify.com/search/{row['SongName'].replace(' ', '%20')}%20{row['ArtistName'].replace(' ', '%20')}"
-            st.link_button(f"▶️ Listen to {row['SongName']}", spotify_search, use_container_width=True)
+            # Action Button
+            spotify_link = f"https://open.spotify.com/search/{row['SongName'].replace(' ', '%20')}%20{row['ArtistName'].replace(' ', '%20')}"
+            st.link_button(f"▶️ Play Now", spotify_link, use_container_width=True)
             st.write("")
 
         if show_now < len(recs):
-            if st.button("⬇️ Load More Tracks", use_container_width=True):
+            if st.button("⬇️ Discover More", use_container_width=True):
                 st.session_state.display_count += 20
                 st.rerun()
 
-    # --- FINAL FOOTER ---
-    st.markdown("<br><hr><p style='text-align: center; color: grey; font-size: 0.85rem;'>Developed by: Buddhadeb, Arghadeep, Sanajit, & Kamalakanta</p>", unsafe_allow_html=True)
+    # --- FOOTER ---
+    st.markdown("<br><hr><p style='text-align: center; color: grey; font-size: 0.85rem; letter-spacing: 1px;'>DESIGNED BY THE MOODTUNES TEAM</p>", unsafe_allow_html=True)
 
 except Exception as e:
-    st.error(f"⚠️ Error: Please ensure 'SpotifySongs.csv' is in your GitHub folder. ({e})")
+    st.error(f"System Error: {e}")
