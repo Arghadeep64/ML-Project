@@ -8,14 +8,13 @@ st.set_page_config(page_title="Music Recommendation System", layout="wide")
 st.markdown("""
     <style>
     /* 1. THE ABSTRACT BACKGROUND DESIGN */
-    /* This creates the artistic circles and subtle glows that stay fixed */
     [data-testid="stAppViewContainer"] {
         background-color: transparent;
         background-image: 
             radial-gradient(circle at 10% 20%, rgba(29, 185, 84, 0.08) 0%, transparent 25%),
             radial-gradient(circle at 85% 15%, rgba(221, 36, 118, 0.08) 0%, transparent 25%),
             radial-gradient(circle at 50% 80%, rgba(255, 177, 153, 0.08) 0%, transparent 30%),
-            radial-gradient(rgba(128, 128, 128, 0.1) 1px, transparent 1px); /* The Small Circles/Dots */
+            radial-gradient(rgba(128, 128, 128, 0.1) 1px, transparent 1px); 
         background-size: 100% 100%, 100% 100%, 100% 100%, 30px 30px;
         background-attachment: fixed;
     }
@@ -38,15 +37,13 @@ st.markdown("""
         margin-top: 15px;
     }
 
-    /* Hide standard UI dots */
     div[role="radiogroup"] > label > div [data-testid="stMarkdownContainer"] { display: none; }
     div[role="radiogroup"] [data-testid="stWidgetLabel"] { display: none; }
     div[role="radiogroup"] label p { display: none; }
 
-    /* The Buttons */
     div[role="radiogroup"] label {
         flex: 1;
-        height: 50px; /* Sleek compact height */
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -61,10 +58,10 @@ st.markdown("""
     }
 
     /* Vibrant Mood Gradients */
-    div[role="radiogroup"] label:nth-of-type(1) { background: linear-gradient(135deg, #667eea, #764ba2); } /* All */
-    div[role="radiogroup"] label:nth-of-type(2) { background: linear-gradient(135deg, #2b5876, #4e4376); } /* Sad */
-    div[role="radiogroup"] label:nth-of-type(3) { background: linear-gradient(135deg, #ff0844, #ffb199); } /* Romantic */
-    div[role="radiogroup"] label:nth-of-type(4) { background: linear-gradient(135deg, #0ba360, #3cba92); } /* Happy */
+    div[role="radiogroup"] label:nth-of-type(1) { background: linear-gradient(135deg, #667eea, #764ba2); } 
+    div[role="radiogroup"] label:nth-of-type(2) { background: linear-gradient(135deg, #2b5876, #4e4376); } 
+    div[role="radiogroup"] label:nth-of-type(3) { background: linear-gradient(135deg, #ff0844, #ffb199); } 
+    div[role="radiogroup"] label:nth-of-type(4) { background: linear-gradient(135deg, #0ba360, #3cba92); } 
 
     /* Text Labels */
     div[role="radiogroup"] label:nth-of-type(1)::after { content: "All Songs"; }
@@ -72,7 +69,6 @@ st.markdown("""
     div[role="radiogroup"] label:nth-of-type(3)::after { content: "Romantic"; }
     div[role="radiogroup"] label:nth-of-type(4)::after { content: "Happy"; }
 
-    /* Selection Highlight */
     div[role="radiogroup"] [data-checked="true"] + div {
         border: 3px solid white !important;
         transform: scale(1.05);
@@ -83,7 +79,7 @@ st.markdown("""
     .song-card {
         padding: 20px;
         border-radius: 18px;
-        background: rgba(128, 128, 128, 0.08); /* Subtle glass effect */
+        background: rgba(128, 128, 128, 0.08); 
         backdrop-filter: blur(5px);
         border: 1px solid rgba(128, 128, 128, 0.1);
         margin-bottom: 12px;
@@ -107,7 +103,8 @@ if 'display_count' not in st.session_state:
 col_t, col_s = st.columns([2.5, 1.5])
 with col_t:
     st.title("🎵 MoodTunes")
-    st.markdown("*Intelligent Music Recommendation System*")
+    # "Intelligent" removed below
+    st.markdown("*Music Recommendation System*")
 
 with col_s:
     st.write("")
@@ -123,13 +120,11 @@ try:
     # --- FILTERING LOGIC ---
     f_df = df.copy()
     
-    # 1. LIVE Search
     if search_query.strip():
         q = search_query.strip().lower()
         f_df = f_df[f_df['SongName'].astype(str).str.lower().str.contains(q, na=False) | 
                     f_df['ArtistName'].astype(str).str.lower().str.contains(q, na=False)]
 
-    # 2. Mood Filtering
     if mood_choice != "All Songs":
         if mood_choice == "Sad": 
             f_df = f_df[(f_df['Valence'] < 0.45) | (f_df['Acousticness'] > 0.6)]
@@ -150,7 +145,6 @@ try:
         
         for i in range(show_now):
             row = recs.iloc[i]
-            # Aesthetic Song Display
             st.markdown(f"""
                 <div class="song-card">
                     <div style="font-weight: 800; font-size: 1.2rem; margin-bottom: 2px;">{i+1}. {row['SongName']}</div>
@@ -158,7 +152,6 @@ try:
                 </div>
             """, unsafe_allow_html=True)
             
-            # Action Button
             spotify_search = f"https://open.spotify.com/search/{row['SongName'].replace(' ', '%20')}%20{row['ArtistName'].replace(' ', '%20')}"
             st.link_button(f"▶️ Listen to {row['SongName']}", spotify_search, use_container_width=True)
             st.write("")
