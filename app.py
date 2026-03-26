@@ -2,20 +2,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# --- CLEAN CREATIVE MASTERPIECE ---
+# --- AESTHETIC MASTERPIECE UI ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
 
 st.markdown("""
     <style>
-    /* 1. HIDE STREAMLIT BRANDING (Avatar, GitHub link, and Top Menu) */
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    .stAppDeployButton {display:none !important;}
-    [data-testid="stAppToolbar"] {display: none !important;}
-
-    /* 2. ANIMATED DYNAMIC BACKGROUND */
+    /* 1. ANIMATED DYNAMIC BACKGROUND */
     [data-testid="stAppViewContainer"] {
-        background: linear-gradient(-45deg, rgba(30, 60, 114, 0.05), rgba(42, 82, 152, 0.05), rgba(233, 64, 87, 0.05));
+        background: linear-gradient(-45deg, rgba(30, 60, 114, 0.03), rgba(42, 82, 152, 0.03), rgba(233, 64, 87, 0.03));
         background-size: 400% 400%;
         animation: gradientMove 15s ease infinite;
         background-attachment: fixed;
@@ -26,8 +20,8 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* 3. SEARCH & MOOD BOXES */
-    .stTextInput input { border-radius: 12px; border: 1px solid rgba(128,128,128,0.2); padding: 12px; background: rgba(255, 255, 255, 0.05) !important; }
+    /* 2. SEARCH & MOOD BOXES */
+    .stTextInput input { border-radius: 12px; border: 1px solid rgba(128,128,128,0.2); padding: 12px; }
     
     div[role="radiogroup"] { display: flex; flex-wrap: nowrap !important; justify-content: space-between; gap: 10px; width: 100%; margin-top: 10px; }
     div[role="radiogroup"] > label > div [data-testid="stMarkdownContainer"] { display: none; }
@@ -41,10 +35,10 @@ st.markdown("""
     }
     
     /* Unique Mood Gradients */
-    div[role="radiogroup"] label:nth-of-type(1) { background: linear-gradient(135deg, #00B4DB, #0083B0); } 
-    div[role="radiogroup"] label:nth-of-type(2) { background: linear-gradient(135deg, #141E30, #243B55); } 
-    div[role="radiogroup"] label:nth-of-type(3) { background: linear-gradient(135deg, #ff4e50, #f9d423); } 
-    div[role="radiogroup"] label:nth-of-type(4) { background: linear-gradient(135deg, #56ab2f, #a8e063); } 
+    div[role="radiogroup"] label:nth-of-type(1) { background: linear-gradient(135deg, #667eea, #764ba2); } 
+    div[role="radiogroup"] label:nth-of-type(2) { background: linear-gradient(135deg, #2b5876, #4e4376); } 
+    div[role="radiogroup"] label:nth-of-type(3) { background: linear-gradient(135deg, #ff0844, #ffb199); } 
+    div[role="radiogroup"] label:nth-of-type(4) { background: linear-gradient(135deg, #0ba360, #3cba92); } 
     
     div[role="radiogroup"] label:nth-of-type(1)::after { content: "All Songs"; }
     div[role="radiogroup"] label:nth-of-type(2)::after { content: "Sad"; }
@@ -53,28 +47,30 @@ st.markdown("""
 
     div[role="radiogroup"] [data-checked="true"] + div { border: 3px solid white !important; transform: scale(1.05); }
 
-    /* 4. SONG CARDS */
+    /* 3. SONG CARDS */
     .song-card {
-        padding: 25px; border-radius: 20px;
-        background: rgba(128, 128, 128, 0.08); backdrop-filter: blur(12px);
-        border: 1px solid rgba(128, 128, 128, 0.1); margin-bottom: 12px;
+        padding: 20px; border-radius: 15px;
+        background: rgba(128, 128, 128, 0.08); backdrop-filter: blur(10px);
+        border: 1px solid rgba(128, 128, 128, 0.1); margin-bottom: 10px;
         transition: 0.3s;
     }
-    .song-card:hover { transform: translateX(10px); background: rgba(128, 128, 128, 0.12); border-color: #1DB954; }
+    .song-card:hover { transform: translateX(10px); background: rgba(128, 128, 128, 0.12); }
 
-    /* 5. THE TEAM FOOTER (Professional Spacing) */
+    /* 4. CREATIVE FOOTER (No more <br> needed) */
     .footer-container {
-        margin-top: 80px;
+        margin-top: 100px; /* This creates the professional space */
         padding: 40px;
+        border-radius: 30px 30px 0 0;
+        background: rgba(128, 128, 128, 0.05);
         border-top: 1px solid rgba(128, 128, 128, 0.2);
         text-align: center;
     }
     .footer-names {
-        font-weight: 300;
-        letter-spacing: 3px;
+        font-weight: 200;
+        letter-spacing: 4px;
         text-transform: uppercase;
-        font-size: 1.1rem;
-        background: linear-gradient(to right, #00B4DB, #ff4e50);
+        font-size: 1.2rem;
+        background: linear-gradient(to right, #667eea, #ff0844);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
@@ -92,20 +88,20 @@ if 'display_count' not in st.session_state:
 col_t, col_s = st.columns([2.5, 1.5])
 with col_t:
     st.title("🎵 Music Recommendation System")
-    st.markdown("<p style='opacity: 0.6;'>Find the perfect soundtrack for your mood</p>", unsafe_allow_html=True)
+    st.caption("Discover your sound by mood and artist")
 
 with col_s:
     st.write("")
-    search_query = st.text_input("Search", "", placeholder="🔍 Search songs or artists...", label_visibility="collapsed")
+    search_query = st.text_input("Search", "", placeholder="🔍 Search...", label_visibility="collapsed")
 
 try:
     df = load_data()
     mood_choices = ["All Songs", "Sad", "Romantic", "Happy/Energetic"]
     
-    st.write("### ✨ Pick Your Vibe")
+    st.write("### ✨ Select Mood")
     mood_choice = st.radio("Mood:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
-    # --- FILTERING ---
+    # --- LOGIC ---
     f_df = df.copy()
     if search_query.strip():
         q = search_query.strip().lower()
@@ -124,14 +120,12 @@ try:
         recs = f_df.reset_index(drop=True)
         show_now = min(st.session_state.display_count, len(recs))
         
-        st.write(f"Discovery: **{len(recs)}** tracks")
-        
         for i in range(show_now):
             row = recs.iloc[i]
             st.markdown(f"""
                 <div class="song-card">
-                    <div style="font-weight: 800; font-size: 1.3rem;">{row['SongName']}</div>
-                    <div style="color: #1DB954; font-weight: 500;">{row['ArtistName']}</div>
+                    <div style="font-weight: 800; font-size: 1.2rem;">{row['SongName']}</div>
+                    <div style="opacity: 0.6;">{row['ArtistName']}</div>
                 </div>
             """, unsafe_allow_html=True)
             u = f"https://open.spotify.com/search/{row['SongName'].replace(' ', '%20')}%20{row['ArtistName'].replace(' ', '%20')}"
@@ -139,18 +133,19 @@ try:
             st.write("")
 
         if show_now < len(recs):
-            if st.button("⬇️ Load More Tracks", use_container_width=True):
+            if st.button("⬇️ Load More", use_container_width=True):
                 st.session_state.display_count += 20
                 st.rerun()
 
-    # --- THE CLEAN TEAM FOOTER ---
+    # --- CREATIVE FOOTER ---
+    # We use a CSS class 'footer-container' instead of <br> tags
     st.markdown(f"""
         <div class="footer-container">
-            <p style="color: grey; font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 8px;">DEVELOPED BY</p>
+            <p style="color: grey; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px;">PROUDLY DEVELOPED BY</p>
             <div class="footer-names">
                 Buddhadeb • Arghadeep • Sanajit • Kamalakanta
             </div>
-            <p style="color: grey; font-size: 0.6rem; margin-top: 15px; opacity: 0.5;">© 2026 MoodTunes Project</p>
+            <p style="color: grey; font-size: 0.7rem; margin-top: 20px;">© 2026 MoodTunes Music System</p>
         </div>
     """, unsafe_allow_html=True)
 
