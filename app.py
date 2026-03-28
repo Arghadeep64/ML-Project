@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 
-# --- MINIMALIST AESTHETIC UI ---
+# --- PROFESSIONAL ACADEMIC UI ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
 
 st.markdown("""
@@ -42,6 +42,8 @@ st.markdown("""
     div[role="radiogroup"] label:nth-of-type(4) { background: linear-gradient(135deg, #0ba360, #3cba92); } 
     div[role="radiogroup"] label:nth-of-type(5) { background: linear-gradient(135deg, #FF512F, #DD2476); } 
     div[role="radiogroup"] label:nth-of-type(6) { background: linear-gradient(135deg, #4b6cb7, #182848); } 
+    div[role="radiogroup"] label:nth-of-type(7) { background: linear-gradient(135deg, #00d2ff, #3a7bd5); } 
+    div[role="radiogroup"] label:nth-of-type(8) { background: linear-gradient(135deg, #f80759, #bc4e9c); } 
     
     div[role="radiogroup"] label:nth-of-type(1)::after { content: "All Tracks"; }
     div[role="radiogroup"] label:nth-of-type(2)::after { content: "Sad"; }
@@ -49,6 +51,8 @@ st.markdown("""
     div[role="radiogroup"] label:nth-of-type(4)::after { content: "Gym/Energy"; }
     div[role="radiogroup"] label:nth-of-type(5)::after { content: "Party"; }
     div[role="radiogroup"] label:nth-of-type(6)::after { content: "Study/Focus"; }
+    div[role="radiogroup"] label:nth-of-type(7)::after { content: "Chill/Relax"; }
+    div[role="radiogroup"] label:nth-of-type(8)::after { content: "Dance"; }
 
     div[role="radiogroup"] [data-checked="true"] + div { border: 3px solid white !important; transform: scale(1.05); }
 
@@ -88,46 +92,45 @@ if 'display_count' not in st.session_state:
 col_t, col_s = st.columns([2.5, 1.5])
 with col_t:
     st.title("🎵 Music Recommendation System")
-    st.caption("A streamlined discovery engine")
+    st.markdown("<p style='opacity: 0.7; font-size: 1.1rem; font-style: italic;'>Bridging the Gap Between Data Science and the Art of Sound.</p>", unsafe_allow_html=True)
 
 with col_s:
     st.write("")
-    search_query = st.text_input("Search", "", placeholder="🔍 Search songs or artists...", label_visibility="collapsed")
+    search_query = st.text_input("Search", "", placeholder="🔍 Search track or artist...", label_visibility="collapsed")
 
 try:
     df = load_data()
     if df.empty:
-        st.error("⚠️ Dataset not found. Please upload 'SpotifySongs.csv' to your GitHub folder.")
+        st.error("⚠️ Dataset not found. Please upload 'SpotifySongs.csv'.")
     else:
-        mood_choices = ["All", "Sad", "Romantic", "Gym", "Party", "Study"]
-        st.write("### ✨ Select Your Vibe")
-        mood_choice = st.radio("Mood:", options=mood_choices, horizontal=True, label_visibility="collapsed")
+        # Changed "Pick your vibe" to "Analyze Mood"
+        mood_choices = ["All", "Sad", "Romantic", "Gym", "Party", "Study", "Chill", "Dance"]
+        st.write("### ✨ Analyze Mood")
+        mood_choice = st.radio("Mood Selector:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
-        # --- FILTERING LOGIC ---
+        # --- ML FILTERING LOGIC ---
         f_df = df.copy()
         if search_query.strip():
             q = search_query.strip().lower()
             f_df = f_df[f_df['SongName'].astype(str).str.lower().str.contains(q, na=False) | 
                         f_df['ArtistName'].astype(str).str.lower().str.contains(q, na=False)]
 
-        if mood_choice == "Sad": 
-            f_df = f_df[(f_df['Valence'] < 0.4) | (f_df['Acousticness'] > 0.6)]
-        elif mood_choice == "Romantic": 
-            f_df = f_df[(f_df['Valence'] > 0.35) & (f_df['Valence'] < 0.65) & (f_df['Energy'] < 0.6)]
-        elif mood_choice == "Gym": 
-            f_df = f_df[(f_df['Energy'] > 0.75) & (f_df['Tempo'] > 120)]
-        elif mood_choice == "Party": 
-            f_df = f_df[(f_df['Danceability'] > 0.75) & (f_df['Energy'] > 0.7)]
-        elif mood_choice == "Study": 
-            f_df = f_df[(f_df['Instrumentalness'] > 0.45) | (f_df['Energy'] < 0.45)]
+        # Advanced Mood Logic
+        if mood_choice == "Sad": f_df = f_df[(f_df['Valence'] < 0.4)]
+        elif mood_choice == "Romantic": f_df = f_df[(f_df['Valence'] > 0.4) & (f_df['Valence'] < 0.6) & (f_df['Energy'] < 0.6)]
+        elif mood_choice == "Gym": f_df = f_df[(f_df['Energy'] > 0.7) & (f_df['Tempo'] > 115)]
+        elif mood_choice == "Party": f_df = f_df[(f_df['Danceability'] > 0.7) & (f_df['Energy'] > 0.7)]
+        elif mood_choice == "Study": f_df = f_df[(f_df['Instrumentalness'] > 0.4) | (f_df['Energy'] < 0.5)]
+        elif mood_choice == "Chill": f_df = f_df[(f_df['Energy'] < 0.4) & (f_df['Loudness'] < -10)]
+        elif mood_choice == "Dance": f_df = f_df[(f_df['Danceability'] > 0.8)]
 
         # --- TRACK COUNTER ---
-        st.metric(label="Tracks Detected", value=len(f_df))
+        st.metric(label="Detected Tracks", value=len(f_df))
         st.write("---")
 
         # --- RESULTS ---
         if f_df.empty:
-            st.warning("No matches found.")
+            st.warning("No matches found for this specific mood analysis.")
         else:
             recs = f_df.reset_index(drop=True)
             show_now = min(st.session_state.display_count, len(recs))
@@ -138,9 +141,12 @@ try:
                     <div class="song-card">
                         <div style="font-weight: 800; font-size: 1.3rem; color: #1DB954;">{row['SongName']}</div>
                         <div style="opacity: 0.7; font-size: 1rem;">{row['ArtistName']}</div>
+                        <div style="margin-top: 10px;">
+                            <span style="background: rgba(29, 185, 84, 0.2); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">🔥 {row['Popularity']}% Popularity</span>
+                        </div>
                     </div>
                 """, unsafe_allow_html=True)
-                # Official Spotify Link
+                
                 u = f"https://open.spotify.com/search/{row['SongName'].replace(' ', '%20')}%20{row['ArtistName'].replace(' ', '%20')}"
                 st.link_button(f"▶️ Play Track", u, use_container_width=True)
                 st.write("")
@@ -153,13 +159,13 @@ try:
         # --- TEAM FOOTER ---
         st.markdown(f"""
             <div class="footer-container">
-                <p style="color: grey; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px;">PROUDLY DEVELOPED BY</p>
+                <p style="color: grey; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px;">PROJECT DEVELOPED BY</p>
                 <div class="footer-names">
                     Buddhadeb • Arghadeep • Sanajit • Kamalakanta
                 </div>
-                <p style="color: grey; font-size: 0.7rem; margin-top: 20px;">© 2026 MoodTunes Project • CSE Dept</p>
+                <p style="color: grey; font-size: 0.7rem; margin-top: 20px;">© 2026 CSE DEPARTMENT • MOODTUNES PROJECT</p>
             </div>
         """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error(f"Logic Error: {e}")
+    st.error(f"System Error: {e}")
