@@ -7,31 +7,31 @@ import urllib.parse
 # --- 1. THEME & STATE INITIALIZATION ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
 
-# Default to Dark on first run
+# Ensure it starts in Dark mode
 if 'app_theme' not in st.session_state: 
     st.session_state.app_theme = "Dark"
 if 'display_count' not in st.session_state: 
     st.session_state.display_count = 20
 
-# --- 2. DYNAMIC THEME COLOR ENGINE ---
+# --- 2. THEME COLOR ENGINE (HARD OVERRIDES) ---
 if st.session_state.app_theme == "Dark":
     main_bg = "#0e1117"
     text_main = "#FFFFFF"
     card_bg = "rgba(255, 255, 255, 0.05)"
     border_color = "rgba(255, 255, 255, 0.1)"
     sub_text = "rgba(255, 255, 255, 0.6)"
-    btn_bg = "#1DB954"
+    btn_bg = "#1DB954"  # Spotify Green
     btn_text = "#FFFFFF"
     input_fill = "rgba(255, 255, 255, 0.05)"
 elif st.session_state.app_theme == "Light":
     main_bg = "#FFFFFF"
-    text_main = "#121212"
+    text_main = "#000000"
     card_bg = "rgba(0, 0, 0, 0.04)"
     border_color = "rgba(0, 0, 0, 0.1)"
     sub_text = "rgba(0, 0, 0, 0.6)"
-    btn_bg = "#1aa34a"  # Brighter green for light mode
+    btn_bg = "#1DB954"  # Spotify Green
     btn_text = "#FFFFFF"
-    input_fill = "#f0f2f6"
+    input_fill = "#f0f2f6"  # Light Grey for Search
 else: # System Default
     main_bg = "transparent"
     text_main = "inherit"
@@ -42,34 +42,35 @@ else: # System Default
     btn_text = "#FFFFFF"
     input_fill = "rgba(128, 128, 128, 0.05)"
 
-# --- 3. TOP NAVIGATION (Settings Top-Right) ---
+# --- 3. TOP NAVIGATION (Top-Right Settings) ---
 t_col1, t_col2 = st.columns([5, 1.2])
 
 with t_col1:
     st.title("🎵 Music Recommendation System")
 
 with t_col2:
+    # We force the popover to be visible
     with st.popover("⚙️ Settings", use_container_width=True):
-        st.markdown(f"<h3 style='color: {text_main};'>Appearance</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: {text_main} !important;'>Appearance</h3>", unsafe_allow_html=True)
         theme_choice = st.selectbox(
             "Select Theme", ["Dark", "Light", "System Default"], 
             index=0 if st.session_state.app_theme == "Dark" else 1,
-            key="theme_selector"
+            key="theme_selector_unique"
         )
         if theme_choice != st.session_state.app_theme:
             st.session_state.app_theme = theme_choice
             st.rerun()
 
-# --- 4. THE MASTER CSS (Adaptive & Flawless) ---
+# --- 4. THE MASTER CSS (Flawless Visibility) ---
 st.markdown(f"""
     <style>
     header {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     .stAppDeployButton {{display:none !important;}}
 
-    /* ADAPTIVE BACKGROUND */
+    /* 1. ADAPTIVE BACKGROUND */
     [data-testid="stAppViewContainer"] {{
-        background-color: {main_bg};
+        background-color: {main_bg} !important;
         background-image: 
             radial-gradient(circle at 10% 20%, rgba(29, 185, 84, 0.1) 0%, transparent 40%),
             radial-gradient(circle at 90% 80%, rgba(221, 36, 118, 0.1) 0%, transparent 40%),
@@ -77,7 +78,6 @@ st.markdown(f"""
         background-size: 400% 400%;
         animation: gradientMove 15s ease infinite;
         background-attachment: fixed;
-        color: {text_main} !important;
     }}
 
     @keyframes gradientMove {{
@@ -86,39 +86,48 @@ st.markdown(f"""
         100% {{ background-position: 0% 50%; }}
     }}
 
-    /* FORCE ALL TEXT & UI ELEMENTS TO ADAPT */
+    /* 2. FORCE TEXT VISIBILITY (The "Match your Mood" Fix) */
     h1, h2, h3, p, span, label, .stMetric div, [data-testid="stMarkdownContainer"] p {{
         color: {text_main} !important;
     }}
 
-    /* SEARCH INPUT - FULLY ADAPTIVE */
+    /* 3. SEARCH BAR - FORCED LIGHT/DARK */
     .stTextInput input {{ 
-        border-radius: 15px; border: 1px solid {border_color}; 
-        padding: 12px; background: {input_fill} !important;
-        color: {text_main} !important; font-size: 16px !important;
+        border-radius: 15px !important; 
+        border: 1px solid {border_color} !important; 
+        padding: 12px !important; 
+        background-color: {input_fill} !important;
+        color: {text_main} !important; 
+        font-size: 16px !important;
     }}
 
-    /* PLAY BUTTONS - STYLISH & CONSISTENT */
-    .stButton button {{
+    /* 4. PLAY BUTTONS - FORCED VISIBILITY */
+    /* Target specifically the link button container */
+    .stElementContainer a[data-testid="stLinkButton"] {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border-radius: 12px !important;
         border: none !important;
         font-weight: bold !important;
-        transition: 0.3s !important;
+        text-decoration: none !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        height: 45px !important;
     }}
-    .stButton button:hover {{
-        transform: scale(1.02);
-        box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+    .stElementContainer a[data-testid="stLinkButton"]:hover {{
+        background-color: #1ed760 !important; /* Slightly brighter green on hover */
+        transform: scale(1.01);
     }}
 
-    /* SETTINGS POPOVER & SELECTBOX ADAPTATION */
+    /* 5. SETTINGS POPOVER ADAPTATION */
     div[data-testid="stPopoverContent"] {{
         background-color: {main_bg} !important;
         border: 1px solid {border_color} !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
     }}
     
-    /* MOOD SELECTOR */
+    /* 6. MOOD SELECTOR */
     div[role="radiogroup"] {{ 
         display: flex; flex-wrap: wrap !important; gap: 8px; margin-top: 10px; 
     }}
@@ -143,7 +152,7 @@ st.markdown(f"""
         transform: scale(1.05); border: 2.5px solid white !important; box-shadow: 0 0 15px rgba(255,255,255,0.3); 
     }}
 
-    /* FLAWLESS SONG CARDS */
+    /* 7. FLAWLESS SONG CARDS */
     .song-card {{
         padding: 25px; border-radius: 20px;
         background: {card_bg}; backdrop-filter: blur(15px);
@@ -171,17 +180,17 @@ def load_data():
         return pd.read_csv('SpotifySongs.csv')
     return pd.DataFrame()
 
-st.markdown(f"<p style='color: {sub_text}; font-size: 1.1rem; font-weight: 300; margin-top: -15px;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: {sub_text} !important; font-size: 1.1rem; font-weight: 300; margin-top: -15px;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
 
 try:
     df = load_data()
     if df.empty:
         st.error("⚠️ Dataset not found.")
     else:
+        # Search Box
         search_query = st.text_input("Search", "", placeholder="🔍 Search track or artist...", label_visibility="collapsed")
         
         st.write("### ✨ Match your Mood")
-        # Changed "Everything" to "All Songs"
         mood_choices = ["All Songs", "Sad", "Romantic", "Workout", "Party", "Focus", "Chill", "Dance"]
         mood_choice = st.radio("Mood Selector:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
@@ -215,13 +224,15 @@ try:
                 st.markdown(f"""
                     <div class="song-card">
                         <div style="font-weight: 800; font-size: 1.4rem; color: #1DB954;">{row['SongName']}</div>
-                        <div style="color: {sub_text}; font-size: 1.1rem; margin-top: 5px;">{row['ArtistName']}</div>
+                        <div style="color: {sub_text} !important; font-size: 1.1rem; margin-top: 5px;">{row['ArtistName']}</div>
                         <div style="margin-top: 15px;">
                             <span style="background: rgba(29, 185, 84, 0.2); color: #1DB954; padding: 5px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">🔥 {row['Popularity']}% Trending</span>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
+                
                 u = f"https://open.spotify.com/search/{urllib.parse.quote(row['SongName'] + ' ' + row['ArtistName'])}"
+                # Streamlit link_button can be targeted specifically
                 st.link_button(f"▶️ Listen to {row['SongName']}", u, use_container_width=True)
                 st.write("")
 
@@ -233,11 +244,11 @@ try:
         # --- TEAM FOOTER ---
         st.markdown(f"""
             <div class="footer-container">
-                <p style="color: {sub_text}; font-size: 0.8rem; letter-spacing: 4px; margin-bottom: 12px;">DEVELOPED BY</p>
+                <p style="color: {sub_text} !important; font-size: 0.8rem; letter-spacing: 4px; margin-bottom: 12px;">DEVELOPED BY</p>
                 <div class="footer-names">
                     Buddhadeb • Arghadeep • Sanajit • Kamalakanta
                 </div>
-                <p style="color: {sub_text}; font-size: 0.75rem; margin-top: 25px; opacity: 0.5;">© 2026 MOODTUNES PROJECT</p>
+                <p style="color: {sub_text} !important; font-size: 0.75rem; margin-top: 25px; opacity: 0.5;">© 2026 MOODTUNES PROJECT</p>
             </div>
         """, unsafe_allow_html=True)
 
