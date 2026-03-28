@@ -4,24 +4,35 @@ import numpy as np
 import os
 import urllib.parse
 
-# --- 1. APP CONFIG & INITIALIZATION ---
+# --- 1. CONFIG & THEME INITIALIZATION ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
 
+# Force Dark Mode as the starting default
 if 'app_theme' not in st.session_state: 
-    st.session_state.app_theme = "Dark" # Defaults to Dark on first open
+    st.session_state.app_theme = "Dark"
 if 'display_count' not in st.session_state: 
     st.session_state.display_count = 20
 
-# --- 2. THEME ENGINE (ROOT VARIABLE OVERRIDES) ---
+# --- 2. THE NUCLEAR THEME ENGINE ---
+# These variables change EVERYTHING in the app based on your selection
 if st.session_state.app_theme == "Dark":
-    m_bg, m_txt, m_card, m_input = "#0e1117", "#FFFFFF", "rgba(255,255,255,0.05)", "rgba(255,255,255,0.05)"
-    m_border, m_sub = "rgba(255,255,255,0.1)", "rgba(255,255,255,0.6)"
+    C_BG = "#0e1117"
+    C_TXT = "#FFFFFF"
+    C_CARD = "rgba(255, 255, 255, 0.05)"
+    C_BORDER = "rgba(255, 255, 255, 0.1)"
+    C_SUB = "rgba(255, 255, 255, 0.6)"
+    C_INPUT = "rgba(255, 255, 255, 0.05)"
+    C_BTN = "#1DB954" # Spotify Green
 elif st.session_state.app_theme == "Light":
-    m_bg, m_txt, m_card, m_input = "#FFFFFF", "#000000", "rgba(0,0,0,0.05)", "#f0f2f6"
-    m_border, m_sub = "rgba(0,0,0,0.1)", "rgba(0,0,0,0.6)"
-else: # System Default
-    m_bg, m_txt, m_card, m_input = "transparent", "inherit", "rgba(128,128,128,0.05)", "rgba(128,128,128,0.05)"
-    m_border, m_sub = "rgba(128,128,128,0.1)", "gray"
+    C_BG = "#FFFFFF"
+    C_TXT = "#000000"
+    C_CARD = "rgba(0, 0, 0, 0.04)"
+    C_BORDER = "rgba(0, 0, 0, 0.1)"
+    C_SUB = "rgba(0, 0, 0, 0.6)"
+    C_INPUT = "#f0f2f6" # Visible light grey search
+    C_BTN = "#1aa34a" # Solid green button
+else: # System Default fallback
+    C_BG, C_TXT, C_CARD, C_BORDER, C_SUB, C_INPUT, C_BTN = "transparent", "inherit", "rgba(128,128,128,0.05)", "rgba(128,128,128,0.1)", "gray", "rgba(128,128,128,0.05)", "#1DB954"
 
 # --- 3. TOP NAVIGATION (Settings Top-Right) ---
 t_col1, t_col2 = st.columns([5, 1.2])
@@ -30,32 +41,34 @@ with t_col1:
     st.title("🎵 Music Recommendation System")
 
 with t_col2:
+    # Aggressive styling for the settings popover
     with st.popover("⚙️ Settings", use_container_width=True):
-        st.markdown(f"### Appearance")
+        st.markdown(f"<h3 style='color: {C_TXT} !important; margin:0;'>Appearance</h3>", unsafe_allow_html=True)
         theme_choice = st.selectbox(
             "Select Theme", ["Dark", "Light", "System Default"], 
-            index=0 if st.session_state.app_theme == "Dark" else 1
+            index=0 if st.session_state.app_theme == "Dark" else 1,
+            key="theme_switcher"
         )
         if theme_choice != st.session_state.app_theme:
             st.session_state.app_theme = theme_choice
             st.rerun()
 
-# --- 4. THE ULTIMATE CSS (Targets Streamlit Internal Variables) ---
+# --- 4. THE ULTIMATE CSS OVERRIDE ---
 st.markdown(f"""
     <style>
+    /* HIDE DEFAULTS */
     header {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     .stAppDeployButton {{display:none !important;}}
 
-    /* FORCE ROOT VARIABLES - This fixes the search and settings colors */
+    /* GLOBAL THEME INJECTION */
     :root {{
-        --text-color: {m_txt};
-        --background-color: {m_bg};
-        --primary-color: #1DB954;
+        --background-color: {C_BG};
+        --text-color: {C_TXT};
     }}
 
     [data-testid="stAppViewContainer"] {{
-        background-color: {m_bg} !important;
+        background-color: {C_BG} !important;
         background-image: 
             radial-gradient(circle at 10% 20%, rgba(29, 185, 84, 0.1) 0%, transparent 40%),
             radial-gradient(circle at 90% 80%, rgba(221, 36, 118, 0.1) 0%, transparent 40%),
@@ -63,7 +76,7 @@ st.markdown(f"""
         background-size: 400% 400%;
         animation: gradientMove 15s ease infinite;
         background-attachment: fixed;
-        color: {m_txt} !important;
+        color: {C_TXT} !important;
     }}
 
     @keyframes gradientMove {{
@@ -72,39 +85,45 @@ st.markdown(f"""
         100% {{ background-position: 0% 50%; }}
     }}
 
-    /* SEARCH BAR & INPUTS */
-    .stTextInput input {{ 
-        background-color: {m_input} !important;
-        color: {m_txt} !important;
-        border: 1px solid {m_border} !important;
-        border-radius: 15px !important;
+    /* FORCE TEXT VISIBILITY */
+    h1, h2, h3, p, span, label, .stMetric div, [data-testid="stMarkdownContainer"] p {{
+        color: {C_TXT} !important;
     }}
 
-    /* PLAY BUTTONS (Link Buttons) */
-    [data-testid="stLinkButton"] > a {{
-        background-color: #1DB954 !important;
+    /* SEARCH INPUT - FIXED FOR LIGHT MODE */
+    .stTextInput input {{ 
+        background-color: {C_INPUT} !important;
+        color: {C_TXT} !important;
+        border: 1px solid {C_BORDER} !important;
+        border-radius: 15px !important;
+        padding: 12px !important;
+    }}
+
+    /* PLAY BUTTONS - FIXED FOR LIGHT MODE */
+    [data-testid="stLinkButton"] a {{
+        background-color: {C_BTN} !important;
         color: #FFFFFF !important;
         border: none !important;
         border-radius: 12px !important;
         font-weight: bold !important;
-        transition: 0.3s !important;
         text-decoration: none !important;
         display: flex !important;
         justify-content: center !important;
+        padding: 10px !important;
     }}
-    [data-testid="stLinkButton"] > a:hover {{
-        background-color: #1ed760 !important;
-        transform: scale(1.02);
+    [data-testid="stLinkButton"] a:hover {{
+        opacity: 0.9;
+        transform: scale(1.01);
     }}
 
-    /* SETTINGS POPOVER CONTENT */
+    /* SETTINGS POPOVER FIX */
     div[data-testid="stPopoverContent"] {{
-        background-color: {m_bg} !important;
-        border: 1px solid {m_border} !important;
-        color: {m_txt} !important;
+        background-color: {C_BG} !important;
+        border: 1px solid {C_BORDER} !important;
+        color: {C_TXT} !important;
     }}
 
-    /* MOOD SELECTOR COLORS */
+    /* MOOD SELECTOR */
     div[role="radiogroup"] {{ display: flex; flex-wrap: wrap !important; gap: 8px; margin-top: 10px; }}
     div[role="radiogroup"] label {{
         padding: 0px 15px; min-width: 110px; height: 48px; 
@@ -123,20 +142,20 @@ st.markdown(f"""
     div[role="radiogroup"] label:nth-of-type(8) {{ background: linear-gradient(135deg, #f80759, #bc4e9c); }} 
 
     div[role="radiogroup"] [data-checked="true"] + div {{ 
-        transform: scale(1.05); border: 2.5px solid white !important;
+        transform: scale(1.05); border: 3px solid white !important; box-shadow: 0 0 15px rgba(255,255,255,0.3); 
     }}
 
-    /* SONG CARDS */
+    /* FLAWLESS SONG CARDS */
     .song-card {{
         padding: 25px; border-radius: 20px;
-        background: {m_card}; backdrop-filter: blur(15px);
-        border: 1px solid {m_border}; margin-bottom: 12px;
+        background: {C_CARD}; backdrop-filter: blur(15px);
+        border: 1px solid {C_BORDER}; margin-bottom: 12px;
     }}
     .song-card:hover {{ border-color: #1DB954; }}
 
     .footer-container {{
         margin-top: 80px; padding: 50px; text-align: center;
-        border-top: 1px solid {m_border};
+        border-top: 1px solid {C_BORDER};
     }}
     .footer-names {{
         font-weight: 300; letter-spacing: 5px; text-transform: uppercase; font-size: 1.2rem;
@@ -146,14 +165,14 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. DATA LOADING ---
+# --- 5. DATA LOGIC ---
 @st.cache_data
 def load_data():
     if os.path.exists('SpotifySongs.csv'):
         return pd.read_csv('SpotifySongs.csv')
     return pd.DataFrame()
 
-st.markdown(f"<p style='color: {m_sub} !important; font-size: 1.1rem; font-weight: 300; margin-top: -15px;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: {C_SUB} !important; font-size: 1.1rem; font-weight: 300; margin-top: -15px;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
 
 try:
     df = load_data()
@@ -167,7 +186,7 @@ try:
         mood_choices = ["All Songs", "Sad", "Romantic", "Workout", "Party", "Focus", "Chill", "Dance"]
         mood_choice = st.radio("Mood Selector:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
-        # Logic
+        # Filtering
         f_df = df.copy()
         if search_query.strip():
             q = search_query.strip().lower()
@@ -182,10 +201,11 @@ try:
         elif mood_choice == "Chill": f_df = f_df[(f_df['Energy'] < 0.4) & (f_df['Loudness'] < -10)]
         elif mood_choice == "Dance": f_df = f_df[(f_df['Danceability'] > 0.8)]
 
-        # Counter
+        # Statistics
         st.metric(label="Songs Found", value=len(f_df))
         st.write("---")
 
+        # Results
         if f_df.empty:
             st.warning("No songs found.")
         else:
@@ -197,12 +217,13 @@ try:
                 st.markdown(f"""
                     <div class="song-card">
                         <div style="font-weight: 800; font-size: 1.4rem; color: #1DB954;">{row['SongName']}</div>
-                        <div style="color: {m_sub} !important; font-size: 1.1rem; margin-top: 5px;">{row['ArtistName']}</div>
+                        <div style="color: {C_SUB} !important; font-size: 1.1rem; margin-top: 5px;">{row['ArtistName']}</div>
                         <div style="margin-top: 15px;">
                             <span style="background: rgba(29, 185, 84, 0.2); color: #1DB954; padding: 5px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">🔥 {row['Popularity']}% Trending</span>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
+                
                 u = f"https://open.spotify.com/search/{urllib.parse.quote(row['SongName'] + ' ' + row['ArtistName'])}"
                 st.link_button(f"▶️ Listen to {row['SongName']}", u, use_container_width=True)
                 st.write("")
@@ -215,11 +236,11 @@ try:
         # --- TEAM FOOTER ---
         st.markdown(f"""
             <div class="footer-container">
-                <p style="color: {m_sub} !important; font-size: 0.8rem; letter-spacing: 4px; margin-bottom: 12px;">DEVELOPED BY</p>
+                <p style="color: {C_SUB} !important; font-size: 0.8rem; letter-spacing: 4px; margin-bottom: 12px;">DEVELOPED BY</p>
                 <div class="footer-names">
                     Buddhadeb • Arghadeep • Sanajit • Kamalakanta
                 </div>
-                <p style="color: {m_sub} !important; font-size: 0.75rem; margin-top: 25px; opacity: 0.5;">© 2026 MOODTUNES PROJECT</p>
+                <p style="color: {C_SUB} !important; font-size: 0.75rem; margin-top: 25px; opacity: 0.5;">© 2026 MOODTUNES PROJECT</p>
             </div>
         """, unsafe_allow_html=True)
 
