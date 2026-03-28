@@ -7,40 +7,50 @@ import urllib.parse
 # --- MASTERPIECE UI CONFIG ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
 
-# 1. THEME STATE MANAGEMENT
-if 'app_theme' not in st.session_state:
-    st.session_state.app_theme = "Dark" # Default to Dark mode on first load
+# 1. SETTINGS & STATE INITIALIZATION
+if 'app_theme' not in st.session_state: st.session_state.app_theme = "Dark"
+if 'bg_animation' not in st.session_state: st.session_state.bg_animation = True
+if 'display_count' not in st.session_state: st.session_state.display_count = 20
+if 'card_opacity' not in st.session_state: st.session_state.card_opacity = 0.08
 
-# 2. SIDEBAR SETTINGS
-with st.sidebar:
-    st.title("⚙️ Settings")
-    theme_choice = st.selectbox(
-        "Appearance",
-        ["Dark", "Light", "System Default"],
-        index=0 # Matches "Dark"
-    )
-    st.session_state.app_theme = theme_choice
+# --- TOP NAVIGATION BAR (Settings Button on Top Right) ---
+t_col1, t_col2 = st.columns([5, 1])
 
-# 3. DYNAMIC CSS INJECTION
-# We define variables based on the chosen theme
+with t_col2:
+    with st.popover("⚙️ Settings", use_container_width=True):
+        st.markdown("### 🛠️ App Controls")
+        
+        # Theme Toggle
+        theme_choice = st.selectbox(
+            "Appearance", ["Dark", "Light", "System Default"], 
+            index=0 if st.session_state.app_theme == "Dark" else 1
+        )
+        st.session_state.app_theme = theme_choice
+        
+        # Animation Toggle
+        st.session_state.bg_animation = st.toggle("Enable Background Motion", value=True)
+        
+        # Results per load
+        st.session_state.display_count = st.select_slider(
+            "Songs per load", options=[10, 20, 50, 100], value=20
+        )
+        
+        # Card Transparency
+        st.session_state.card_opacity = st.slider("Glass Transparency", 0.01, 0.20, 0.08)
+
+# 2. DYNAMIC THEME ENGINE
 if st.session_state.app_theme == "Dark":
-    bg_color = "rgba(10, 10, 10, 1)"
-    text_color = "#FFFFFF"
-    card_bg = "rgba(255, 255, 255, 0.05)"
+    bg_color, text_color, input_bg = "rgba(10, 10, 10, 1)", "#FFFFFF", "rgba(255, 255, 255, 0.05)"
     glass_border = "rgba(255, 255, 255, 0.1)"
-    input_bg = "rgba(255, 255, 255, 0.05)"
 elif st.session_state.app_theme == "Light":
-    bg_color = "#f0f2f6"
-    text_color = "#000000"
-    card_bg = "rgba(255, 255, 255, 0.7)"
+    bg_color, text_color, input_bg = "#f0f2f6", "#000000", "rgba(255, 255, 255, 0.8)"
     glass_border = "rgba(0, 0, 0, 0.1)"
-    input_bg = "rgba(255, 255, 255, 0.8)"
-else: # System Default
-    bg_color = "transparent"
-    text_color = "inherit"
-    card_bg = "rgba(128, 128, 128, 0.05)"
+else: # System
+    bg_color, text_color, input_bg = "transparent", "inherit", "rgba(128, 128, 128, 0.05)"
     glass_border = "rgba(128, 128, 128, 0.1)"
-    input_bg = "rgba(128, 128, 128, 0.05)"
+
+# 3. ADVANCED CSS
+anim_css = "animation: gradientMove 15s ease infinite;" if st.session_state.bg_animation else ""
 
 st.markdown(f"""
     <style>
@@ -52,39 +62,38 @@ st.markdown(f"""
     [data-testid="stAppViewContainer"] {{
         background-color: {bg_color};
         background-image: 
-            radial-gradient(circle at 10% 20%, rgba(29, 185, 84, 0.1) 0%, transparent 40%),
-            radial-gradient(circle at 90% 80%, rgba(221, 36, 118, 0.1) 0%, transparent 40%),
+            radial-gradient(circle at 15% 15%, rgba(29, 185, 84, 0.12) 0%, transparent 40%),
+            radial-gradient(circle at 85% 85%, rgba(221, 36, 118, 0.12) 0%, transparent 40%),
             radial-gradient(rgba(128, 128, 128, 0.05) 1.5px, transparent 1.5px);
-        background-size: 100% 100%, 100% 100%, 40px 40px;
+        background-size: 400% 400%;
+        {anim_css}
         background-attachment: fixed;
         color: {text_color};
     }}
 
-    @keyframes fadeInUp {{
-        from {{ opacity: 0; transform: translateY(20px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
+    @keyframes gradientMove {{
+        0% {{ background-position: 0% 50%; }}
+        50% {{ background-position: 100% 50%; }}
+        100% {{ background-position: 0% 50%; }}
     }}
 
-    /* GLASSMORPHISM ELEMENTS */
     .stTextInput input {{ 
         border-radius: 20px; 
         border: 1px solid rgba(128,128,128,0.2); 
         padding: 15px; 
         background: {input_bg} !important;
         backdrop-filter: blur(10px);
-        transition: 0.3s;
         color: {text_color} !important;
     }}
     
-    div[role="radiogroup"] {{ display: flex; flex-wrap: wrap !important; justify-content: center; gap: 12px; margin-top: 15px; }}
+    div[role="radiogroup"] {{ display: flex; flex-wrap: wrap !important; justify-content: center; gap: 10px; margin-top: 15px; }}
     div[role="radiogroup"] > label > div [data-testid="stMarkdownContainer"] {{ display: none; }}
     div[role="radiogroup"] [data-testid="stWidgetLabel"] {{ display: none; }}
     div[role="radiogroup"] label p {{ display: none; }}
     
     div[role="radiogroup"] label {{
         flex: 1; min-width: 120px; height: 50px; display: flex; align-items: center; justify-content: center;
-        border-radius: 15px; font-weight: 800; color: white !important; cursor: pointer; 
-        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-radius: 15px; font-weight: 800; color: white !important; cursor: pointer; transition: 0.4s;
     }}
     
     /* GORGEOUS MOOD GRADIENTS */
@@ -110,12 +119,11 @@ st.markdown(f"""
 
     .song-card {{
         padding: 30px; border-radius: 25px;
-        background: {card_bg}; 
+        background: rgba(128, 128, 128, {st.session_state.card_opacity}); 
         backdrop-filter: blur(20px);
         border: 1px solid {glass_border}; 
         margin-bottom: 10px;
         transition: 0.4s ease;
-        animation: fadeInUp 0.5s ease-out;
     }}
     .song-card:hover {{ transform: translateY(-5px); border-color: #1DB954; }}
 
@@ -131,18 +139,17 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
+# --- LOAD DATA ---
 @st.cache_data
 def load_data():
     if os.path.exists('SpotifySongs.csv'):
         return pd.read_csv('SpotifySongs.csv')
     return pd.DataFrame()
 
-if 'display_count' not in st.session_state:
-    st.session_state.display_count = 20
-
 # --- APP LAYOUT ---
-st.title("🎵 Music Recommendation System")
-st.markdown("<p style='opacity: 0.8; font-size: 1.2rem; font-weight: 300; text-align: center;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
+with t_col1:
+    st.title("🎵 Music Recommendation System")
+    st.markdown("<p style='opacity: 0.8; font-size: 1.2rem; font-weight: 300;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
 
 try:
     df = load_data()
@@ -159,7 +166,7 @@ try:
         st.write("### ✨ Match your Mood")
         mood_choice = st.radio("Mood Selector:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
-        # --- LOGIC ---
+        # --- LOGIC (UNTOUCHED) ---
         f_df = df.copy()
         if search_query.strip():
             q = search_query.strip().lower()
@@ -174,6 +181,7 @@ try:
         elif mood_choice == "Chill": f_df = f_df[(f_df['Energy'] < 0.4) & (f_df['Loudness'] < -10)]
         elif mood_choice == "Dance": f_df = f_df[(f_df['Danceability'] > 0.8)]
 
+        # --- TRACKS FOUND COUNTER ---
         st.metric(label="Songs Found", value=len(f_df))
         st.write("---")
 
