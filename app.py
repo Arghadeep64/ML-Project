@@ -7,99 +7,127 @@ import urllib.parse
 # --- MASTERPIECE UI CONFIG ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
 
-st.markdown("""
-    <style>
-    /* 1. CLEAN THEME & ADAPTIVE BACKDROP */
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    .stAppDeployButton {display:none !important;}
-    [data-testid="stAppToolbar"] {display: block !important;} /* Keeps the settings menu for Light/Dark toggle */
+# 1. THEME STATE MANAGEMENT
+if 'app_theme' not in st.session_state:
+    st.session_state.app_theme = "Dark" # Default to Dark mode on first load
 
-    /* 2. MODERN SMOOTH BACKGROUND */
-    [data-testid="stAppViewContainer"] {
-        background-color: transparent;
+# 2. SIDEBAR SETTINGS
+with st.sidebar:
+    st.title("⚙️ Settings")
+    theme_choice = st.selectbox(
+        "Appearance",
+        ["Dark", "Light", "System Default"],
+        index=0 # Matches "Dark"
+    )
+    st.session_state.app_theme = theme_choice
+
+# 3. DYNAMIC CSS INJECTION
+# We define variables based on the chosen theme
+if st.session_state.app_theme == "Dark":
+    bg_color = "rgba(10, 10, 10, 1)"
+    text_color = "#FFFFFF"
+    card_bg = "rgba(255, 255, 255, 0.05)"
+    glass_border = "rgba(255, 255, 255, 0.1)"
+    input_bg = "rgba(255, 255, 255, 0.05)"
+elif st.session_state.app_theme == "Light":
+    bg_color = "#f0f2f6"
+    text_color = "#000000"
+    card_bg = "rgba(255, 255, 255, 0.7)"
+    glass_border = "rgba(0, 0, 0, 0.1)"
+    input_bg = "rgba(255, 255, 255, 0.8)"
+else: # System Default
+    bg_color = "transparent"
+    text_color = "inherit"
+    card_bg = "rgba(128, 128, 128, 0.05)"
+    glass_border = "rgba(128, 128, 128, 0.1)"
+    input_bg = "rgba(128, 128, 128, 0.05)"
+
+st.markdown(f"""
+    <style>
+    header {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    .stAppDeployButton {{display:none !important;}}
+
+    /* MODERN SMOOTH BACKGROUND */
+    [data-testid="stAppViewContainer"] {{
+        background-color: {bg_color};
         background-image: 
             radial-gradient(circle at 10% 20%, rgba(29, 185, 84, 0.1) 0%, transparent 40%),
             radial-gradient(circle at 90% 80%, rgba(221, 36, 118, 0.1) 0%, transparent 40%),
             radial-gradient(rgba(128, 128, 128, 0.05) 1.5px, transparent 1.5px);
         background-size: 100% 100%, 100% 100%, 40px 40px;
         background-attachment: fixed;
-    }
+        color: {text_color};
+    }}
 
-    /* 3. ENTRANCE ANIMATIONS */
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .main-container {
-        animation: fadeInUp 0.8s ease-out;
-    }
+    @keyframes fadeInUp {{
+        from {{ opacity: 0; transform: translateY(20px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
 
-    /* 4. GLASSMORPHISM SEARCH & MOOD SELECTOR */
-    .stTextInput input { 
+    /* GLASSMORPHISM ELEMENTS */
+    .stTextInput input {{ 
         border-radius: 20px; 
         border: 1px solid rgba(128,128,128,0.2); 
         padding: 15px; 
-        background: rgba(128, 128, 128, 0.05) !important;
+        background: {input_bg} !important;
         backdrop-filter: blur(10px);
         transition: 0.3s;
-    }
-    .stTextInput input:focus { border-color: #1DB954; box-shadow: 0 0 15px rgba(29, 185, 84, 0.2); }
+        color: {text_color} !important;
+    }}
     
-    div[role="radiogroup"] { display: flex; flex-wrap: wrap !important; justify-content: center; gap: 12px; margin-top: 15px; }
-    div[role="radiogroup"] > label > div [data-testid="stMarkdownContainer"] { display: none; }
-    div[role="radiogroup"] [data-testid="stWidgetLabel"] { display: none; }
-    div[role="radiogroup"] label p { display: none; }
+    div[role="radiogroup"] {{ display: flex; flex-wrap: wrap !important; justify-content: center; gap: 12px; margin-top: 15px; }}
+    div[role="radiogroup"] > label > div [data-testid="stMarkdownContainer"] {{ display: none; }}
+    div[role="radiogroup"] [data-testid="stWidgetLabel"] {{ display: none; }}
+    div[role="radiogroup"] label p {{ display: none; }}
     
-    div[role="radiogroup"] label {
+    div[role="radiogroup"] label {{
         flex: 1; min-width: 120px; height: 50px; display: flex; align-items: center; justify-content: center;
         border-radius: 15px; font-weight: 800; color: white !important; cursor: pointer; 
         transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+    }}
     
-    /* Elegant Gradients */
-    div[role="radiogroup"] label:nth-of-type(1) { background: linear-gradient(135deg, #667eea, #764ba2); } 
-    div[role="radiogroup"] label:nth-of-type(2) { background: linear-gradient(135deg, #2b5876, #4e4376); } 
-    div[role="radiogroup"] label:nth-of-type(3) { background: linear-gradient(135deg, #ff0844, #ffb199); } 
-    div[role="radiogroup"] label:nth-of-type(4) { background: linear-gradient(135deg, #0ba360, #3cba92); } 
-    div[role="radiogroup"] label:nth-of-type(5) { background: linear-gradient(135deg, #FF512F, #DD2476); } 
-    div[role="radiogroup"] label:nth-of-type(6) { background: linear-gradient(135deg, #4b6cb7, #182848); } 
-    div[role="radiogroup"] label:nth-of-type(7) { background: linear-gradient(135deg, #00d2ff, #3a7bd5); } 
-    div[role="radiogroup"] label:nth-of-type(8) { background: linear-gradient(135deg, #f80759, #bc4e9c); } 
+    /* GORGEOUS MOOD GRADIENTS */
+    div[role="radiogroup"] label:nth-of-type(1) {{ background: linear-gradient(135deg, #667eea, #764ba2); }} 
+    div[role="radiogroup"] label:nth-of-type(2) {{ background: linear-gradient(135deg, #2b5876, #4e4376); }} 
+    div[role="radiogroup"] label:nth-of-type(3) {{ background: linear-gradient(135deg, #ff0844, #ffb199); }} 
+    div[role="radiogroup"] label:nth-of-type(4) {{ background: linear-gradient(135deg, #0ba360, #3cba92); }} 
+    div[role="radiogroup"] label:nth-of-type(5) {{ background: linear-gradient(135deg, #FF512F, #DD2476); }} 
+    div[role="radiogroup"] label:nth-of-type(6) {{ background: linear-gradient(135deg, #4b6cb7, #182848); }} 
+    div[role="radiogroup"] label:nth-of-type(7) {{ background: linear-gradient(135deg, #00d2ff, #3a7bd5); }} 
+    div[role="radiogroup"] label:nth-of-type(8) {{ background: linear-gradient(135deg, #f80759, #bc4e9c); }} 
     
-    div[role="radiogroup"] label:nth-of-type(1)::after { content: "Everything"; }
-    div[role="radiogroup"] label:nth-of-type(2)::after { content: "Sad"; }
-    div[role="radiogroup"] label:nth-of-type(3)::after { content: "Romantic"; }
-    div[role="radiogroup"] label:nth-of-type(4)::after { content: "Workout"; }
-    div[role="radiogroup"] label:nth-of-type(5)::after { content: "Party"; }
-    div[role="radiogroup"] label:nth-of-type(6)::after { content: "Focus"; }
-    div[role="radiogroup"] label:nth-of-type(7)::after { content: "Chill"; }
-    div[role="radiogroup"] label:nth-of-type(8)::after { content: "Dance"; }
+    div[role="radiogroup"] label:nth-of-type(1)::after {{ content: "Everything"; }}
+    div[role="radiogroup"] label:nth-of-type(2)::after {{ content: "Sad"; }}
+    div[role="radiogroup"] label:nth-of-type(3)::after {{ content: "Romantic"; }}
+    div[role="radiogroup"] label:nth-of-type(4)::after {{ content: "Workout"; }}
+    div[role="radiogroup"] label:nth-of-type(5)::after {{ content: "Party"; }}
+    div[role="radiogroup"] label:nth-of-type(6)::after {{ content: "Focus"; }}
+    div[role="radiogroup"] label:nth-of-type(7)::after {{ content: "Chill"; }}
+    div[role="radiogroup"] label:nth-of-type(8)::after {{ content: "Dance"; }}
 
-    div[role="radiogroup"] [data-checked="true"] + div { transform: scale(1.1); border: 3px solid white !important; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+    div[role="radiogroup"] [data-checked="true"] + div {{ transform: scale(1.1); border: 3px solid white !important; box-shadow: 0 0 20px rgba(255,255,255,0.2); }}
 
-    /* 5. FLAWLESS SONG CARDS */
-    .song-card {
+    .song-card {{
         padding: 30px; border-radius: 25px;
-        background: rgba(128, 128, 128, 0.05); 
+        background: {card_bg}; 
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1); 
+        border: 1px solid {glass_border}; 
         margin-bottom: 10px;
         transition: 0.4s ease;
         animation: fadeInUp 0.5s ease-out;
-    }
-    .song-card:hover { transform: translateY(-5px); border-color: #1DB954; background: rgba(128, 128, 128, 0.08); }
+    }}
+    .song-card:hover {{ transform: translateY(-5px); border-color: #1DB954; }}
 
-    /* 6. TEAM FOOTER */
-    .footer-container {
+    .footer-container {{
         margin-top: 100px; padding: 60px; text-align: center;
         border-top: 1px solid rgba(128, 128, 128, 0.1);
-    }
-    .footer-names {
+    }}
+    .footer-names {{
         font-weight: 300; letter-spacing: 5px; text-transform: uppercase; font-size: 1.3rem;
         background: linear-gradient(to right, #667eea, #ff0844);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -112,8 +140,7 @@ def load_data():
 if 'display_count' not in st.session_state:
     st.session_state.display_count = 20
 
-# --- HEADER SECTION ---
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
+# --- APP LAYOUT ---
 st.title("🎵 Music Recommendation System")
 st.markdown("<p style='opacity: 0.8; font-size: 1.2rem; font-weight: 300; text-align: center;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
 
@@ -132,7 +159,7 @@ try:
         st.write("### ✨ Match your Mood")
         mood_choice = st.radio("Mood Selector:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
-        # --- LOGIC (UNTOUCHED) ---
+        # --- LOGIC ---
         f_df = df.copy()
         if search_query.strip():
             q = search_query.strip().lower()
@@ -147,11 +174,9 @@ try:
         elif mood_choice == "Chill": f_df = f_df[(f_df['Energy'] < 0.4) & (f_df['Loudness'] < -10)]
         elif mood_choice == "Dance": f_df = f_df[(f_df['Danceability'] > 0.8)]
 
-        # --- TRACK COUNTER ---
         st.metric(label="Songs Found", value=len(f_df))
         st.write("---")
 
-        # --- DISPLAY ---
         if f_df.empty:
             st.warning("No songs found for this selection.")
         else:
@@ -191,4 +216,3 @@ try:
 
 except Exception as e:
     st.error(f"Error: {e}")
-st.markdown('</div>', unsafe_allow_html=True)
