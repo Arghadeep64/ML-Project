@@ -4,221 +4,181 @@ import numpy as np
 import os
 import urllib.parse
 
-# --- 1. CONFIG & THEME INITIALIZATION ---
-st.set_page_config(page_title="Music Recommendation System", layout="wide")
+# --- 1. [TEAM MEMBER: ARGHADEEP] UI/UX DESIGN & CSS ARCHITECTURE ---
+# Responsibility: Crafting the visual identity, Dark Mode CSS, and Animations.
 
-# Force Dark Mode as the starting default
-if 'app_theme' not in st.session_state: 
-    st.session_state.app_theme = "Dark"
-if 'display_count' not in st.session_state: 
-    st.session_state.display_count = 20
+st.set_page_config(page_title="MoodTunes Music System", layout="wide")
 
-# --- 2. THE NUCLEAR THEME ENGINE ---
-# These variables change EVERYTHING in the app based on your selection
-if st.session_state.app_theme == "Dark":
-    C_BG = "#0e1117"
-    C_TXT = "#FFFFFF"
-    C_CARD = "rgba(255, 255, 255, 0.05)"
-    C_BORDER = "rgba(255, 255, 255, 0.1)"
-    C_SUB = "rgba(255, 255, 255, 0.6)"
-    C_INPUT = "rgba(255, 255, 255, 0.05)"
-    C_BTN = "#1DB954" # Spotify Green
-elif st.session_state.app_theme == "Light":
-    C_BG = "#FFFFFF"
-    C_TXT = "#000000"
-    C_CARD = "rgba(0, 0, 0, 0.04)"
-    C_BORDER = "rgba(0, 0, 0, 0.1)"
-    C_SUB = "rgba(0, 0, 0, 0.6)"
-    C_INPUT = "#f0f2f6" # Visible light grey search
-    C_BTN = "#1aa34a" # Solid green button
-else: # System Default fallback
-    C_BG, C_TXT, C_CARD, C_BORDER, C_SUB, C_INPUT, C_BTN = "transparent", "inherit", "rgba(128,128,128,0.05)", "rgba(128,128,128,0.1)", "gray", "rgba(128,128,128,0.05)", "#1DB954"
-
-# --- 3. TOP NAVIGATION (Settings Top-Right) ---
-t_col1, t_col2 = st.columns([5, 1.2])
-
-with t_col1:
-    st.title("🎵 Music Recommendation System")
-
-with t_col2:
-    # Aggressive styling for the settings popover
-    with st.popover("⚙️ Settings", use_container_width=True):
-        st.markdown(f"<h3 style='color: {C_TXT} !important; margin:0;'>Appearance</h3>", unsafe_allow_html=True)
-        theme_choice = st.selectbox(
-            "Select Theme", ["Dark", "Light", "System Default"], 
-            index=0 if st.session_state.app_theme == "Dark" else 1,
-            key="theme_switcher"
-        )
-        if theme_choice != st.session_state.app_theme:
-            st.session_state.app_theme = theme_choice
-            st.rerun()
-
-# --- 4. THE ULTIMATE CSS OVERRIDE ---
-st.markdown(f"""
+# Permanent Dark Mode CSS with Glassmorphism
+st.markdown("""
     <style>
-    /* HIDE DEFAULTS */
-    header {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    .stAppDeployButton {{display:none !important;}}
+    /* HIDE STREAMLIT OVERLAYS */
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stAppDeployButton {display:none !important;}
+    [data-testid="stAppToolbar"] {display: none !important;}
 
-    /* GLOBAL THEME INJECTION */
-    :root {{
-        --background-color: {C_BG};
-        --text-color: {C_TXT};
-    }}
-
-    [data-testid="stAppViewContainer"] {{
-        background-color: {C_BG} !important;
+    /* DARK THEME BASE */
+    [data-testid="stAppViewContainer"] {
+        background-color: #0e1117 !important;
         background-image: 
-            radial-gradient(circle at 10% 20%, rgba(29, 185, 84, 0.1) 0%, transparent 40%),
-            radial-gradient(circle at 90% 80%, rgba(221, 36, 118, 0.1) 0%, transparent 40%),
-            radial-gradient(rgba(128, 128, 128, 0.05) 1.5px, transparent 1.5px);
+            radial-gradient(circle at 10% 20%, rgba(29, 185, 84, 0.15) 0%, transparent 45%),
+            radial-gradient(circle at 90% 80%, rgba(221, 36, 118, 0.1) 0%, transparent 45%),
+            radial-gradient(rgba(255, 255, 255, 0.05) 1.5px, transparent 1.5px);
         background-size: 400% 400%;
         animation: gradientMove 15s ease infinite;
         background-attachment: fixed;
-        color: {C_TXT} !important;
-    }}
+    }
 
-    @keyframes gradientMove {{
-        0% {{ background-position: 0% 50%; }}
-        50% {{ background-position: 100% 50%; }}
-        100% {{ background-position: 0% 50%; }}
-    }}
+    @keyframes gradientMove {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
 
-    /* FORCE TEXT VISIBILITY */
-    h1, h2, h3, p, span, label, .stMetric div, [data-testid="stMarkdownContainer"] p {{
-        color: {C_TXT} !important;
-    }}
-
-    /* SEARCH INPUT - FIXED FOR LIGHT MODE */
-    .stTextInput input {{ 
-        background-color: {C_INPUT} !important;
-        color: {C_TXT} !important;
-        border: 1px solid {C_BORDER} !important;
-        border-radius: 15px !important;
-        padding: 12px !important;
-    }}
-
-    /* PLAY BUTTONS - FIXED FOR LIGHT MODE */
-    [data-testid="stLinkButton"] a {{
-        background-color: {C_BTN} !important;
+    /* TYPOGRAPHY */
+    h1, h2, h3, p, span, label, .stMetric div {
         color: #FFFFFF !important;
-        border: none !important;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* SEARCH INPUT */
+    .stTextInput input { 
+        border-radius: 15px !important; 
+        border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+        padding: 12px !important; 
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        color: #FFFFFF !important;
+    }
+
+    /* PLAY BUTTONS (SPOTIFY STYLE) */
+    [data-testid="stLinkButton"] a {
+        background-color: #1DB954 !important;
+        color: #FFFFFF !important;
         border-radius: 12px !important;
         font-weight: bold !important;
         text-decoration: none !important;
         display: flex !important;
         justify-content: center !important;
-        padding: 10px !important;
-    }}
-    [data-testid="stLinkButton"] a:hover {{
-        opacity: 0.9;
-        transform: scale(1.01);
-    }}
-
-    /* SETTINGS POPOVER FIX */
-    div[data-testid="stPopoverContent"] {{
-        background-color: {C_BG} !important;
-        border: 1px solid {C_BORDER} !important;
-        color: {C_TXT} !important;
-    }}
+        padding: 12px !important;
+        transition: 0.3s ease !important;
+    }
+    [data-testid="stLinkButton"] a:hover {
+        background-color: #1ed760 !important;
+        transform: scale(1.02);
+    }
 
     /* MOOD SELECTOR */
-    div[role="radiogroup"] {{ display: flex; flex-wrap: wrap !important; gap: 8px; margin-top: 10px; }}
-    div[role="radiogroup"] label {{
+    div[role="radiogroup"] { display: flex; flex-wrap: wrap !important; gap: 8px; margin-top: 10px; }
+    div[role="radiogroup"] label {
         padding: 0px 15px; min-width: 110px; height: 48px; 
         display: flex; align-items: center; justify-content: center;
         border-radius: 12px; font-weight: 700; color: white !important; cursor: pointer; 
-    }}
+    }
+    div[role="radiogroup"] [data-checked="true"] + div { 
+        transform: scale(1.05); border: 2.5px solid white !important;
+    }
 
-    /* MOOD GRADIENTS */
-    div[role="radiogroup"] label:nth-of-type(1) {{ background: linear-gradient(135deg, #667eea, #764ba2); }} 
-    div[role="radiogroup"] label:nth-of-type(2) {{ background: linear-gradient(135deg, #2b5876, #4e4376); }} 
-    div[role="radiogroup"] label:nth-of-type(3) {{ background: linear-gradient(135deg, #ff4e50, #f9d423); }} 
-    div[role="radiogroup"] label:nth-of-type(4) {{ background: linear-gradient(135deg, #0ba360, #3cba92); }} 
-    div[role="radiogroup"] label:nth-of-type(5) {{ background: linear-gradient(135deg, #FF512F, #DD2476); }} 
-    div[role="radiogroup"] label:nth-of-type(6) {{ background: linear-gradient(135deg, #4b6cb7, #182848); }} 
-    div[role="radiogroup"] label:nth-of-type(7) {{ background: linear-gradient(135deg, #00d2ff, #3a7bd5); }} 
-    div[role="radiogroup"] label:nth-of-type(8) {{ background: linear-gradient(135deg, #f80759, #bc4e9c); }} 
-
-    div[role="radiogroup"] [data-checked="true"] + div {{ 
-        transform: scale(1.05); border: 3px solid white !important; box-shadow: 0 0 15px rgba(255,255,255,0.3); 
-    }}
-
-    /* FLAWLESS SONG CARDS */
-    .song-card {{
+    /* SONG CARDS */
+    .song-card {
         padding: 25px; border-radius: 20px;
-        background: {C_CARD}; backdrop-filter: blur(15px);
-        border: 1px solid {C_BORDER}; margin-bottom: 12px;
-    }}
-    .song-card:hover {{ border-color: #1DB954; }}
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 15px;
+        transition: 0.3s ease;
+    }
+    .song-card:hover { border-color: #1DB954; }
 
-    .footer-container {{
-        margin-top: 80px; padding: 50px; text-align: center;
-        border-top: 1px solid {C_BORDER};
-    }}
-    .footer-names {{
-        font-weight: 300; letter-spacing: 5px; text-transform: uppercase; font-size: 1.2rem;
-        background: linear-gradient(to right, #667eea, #ff0844);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }}
+    /* FOOTER */
+    .footer-container {
+        margin-top: 100px; padding: 50px; text-align: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. DATA LOGIC ---
+# --- 2. [TEAM MEMBER: BUDDHADEB] DATA PROCESSING & CACHING ---
+# Responsibility: Handling the Spotify dataset, cleaning null values, and optimizing load times.
+
 @st.cache_data
-def load_data():
+def load_and_clean_data():
     if os.path.exists('SpotifySongs.csv'):
-        return pd.read_csv('SpotifySongs.csv')
+        data = pd.read_csv('SpotifySongs.csv')
+        return data.dropna()
     return pd.DataFrame()
 
-st.markdown(f"<p style='color: {C_SUB} !important; font-size: 1.1rem; font-weight: 300; margin-top: -15px;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
+# --- 3. [TEAM MEMBER: SANAJIT] FEATURE ENGINEERING & MOOD LOGIC ---
+# Responsibility: Developing the algorithms that map audio features (Valence, Energy, Tempo) to human moods.
+
+def filter_by_mood(df, mood):
+    if mood == "Sad": return df[df['Valence'] < 0.4]
+    elif mood == "Romantic": return df[(df['Valence'] > 0.4) & (df['Valence'] < 0.6) & (df['Energy'] < 0.6)]
+    elif mood == "Workout": return df[(df['Energy'] > 0.7) & (df['Tempo'] > 115)]
+    elif mood == "Party": return df[(df['Danceability'] > 0.7) & (df['Energy'] > 0.7)]
+    elif mood == "Focus": return df[(df['Instrumentalness'] > 0.4) | (df['Energy'] < 0.5)]
+    elif mood == "Chill": return df[(df['Energy'] < 0.4) & (df['Loudness'] < -10)]
+    elif mood == "Dance": return df[df['Danceability'] > 0.8]
+    return df
+
+# --- 4. [TEAM MEMBER: KAMALAKANTA] SYSTEM INTEGRATION & DEPLOYMENT ---
+# Responsibility: Managing state, implementing search functionality, and coordinating the final deployment.
+
+if 'display_limit' not in st.session_state: st.session_state.display_limit = 20
+
+st.title("🎵 Music Recommendation System")
+st.markdown("<p style='opacity: 0.7; font-size: 1.1rem; font-weight: 300; margin-top: -15px;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
 
 try:
-    df = load_data()
+    df = load_and_clean_data()
     if df.empty:
-        st.error("⚠️ Dataset not found.")
+        st.error("⚠️ Dataset not found. Please upload 'SpotifySongs.csv'.")
     else:
-        # Search Box
+        # Search & Mood Section
         search_query = st.text_input("Search", "", placeholder="🔍 Search track or artist...", label_visibility="collapsed")
         
         st.write("### ✨ Match your Mood")
         mood_choices = ["All Songs", "Sad", "Romantic", "Workout", "Party", "Focus", "Chill", "Dance"]
-        mood_choice = st.radio("Mood Selector:", options=mood_choices, horizontal=True, label_visibility="collapsed")
+        
+        # Mapping gradients to Moods (Arghadeep's CSS logic continues here)
+        st.markdown("""
+            <style>
+            div[role="radiogroup"] label:nth-of-type(1) { background: linear-gradient(135deg, #667eea, #764ba2); } 
+            div[role="radiogroup"] label:nth-of-type(2) { background: linear-gradient(135deg, #2b5876, #4e4376); } 
+            div[role="radiogroup"] label:nth-of-type(3) { background: linear-gradient(135deg, #ff4e50, #f9d423); } 
+            div[role="radiogroup"] label:nth-of-type(4) { background: linear-gradient(135deg, #0ba360, #3cba92); } 
+            div[role="radiogroup"] label:nth-of-type(5) { background: linear-gradient(135deg, #FF512F, #DD2476); } 
+            div[role="radiogroup"] label:nth-of-type(6) { background: linear-gradient(135deg, #4b6cb7, #182848); } 
+            div[role="radiogroup"] label:nth-of-type(7) { background: linear-gradient(135deg, #00d2ff, #3a7bd5); } 
+            div[role="radiogroup"] label:nth-of-type(8) { background: linear-gradient(135deg, #f80759, #bc4e9c); } 
+            </style>
+        """, unsafe_allow_html=True)
+        
+        mood_choice = st.radio("Mood Selector", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
-        # Filtering
-        f_df = df.copy()
+        # Filtering Logic
+        filtered_df = filter_by_mood(df, mood_choice)
         if search_query.strip():
             q = search_query.strip().lower()
-            f_df = f_df[f_df['SongName'].astype(str).str.lower().str.contains(q, na=False) | 
-                        f_df['ArtistName'].astype(str).str.lower().str.contains(q, na=False)]
+            filtered_df = filtered_df[filtered_df['SongName'].astype(str).str.lower().str.contains(q, na=False) | 
+                                    filtered_df['ArtistName'].astype(str).str.lower().str.contains(q, na=False)]
 
-        if mood_choice == "Sad": f_df = f_df[(f_df['Valence'] < 0.4)]
-        elif mood_choice == "Romantic": f_df = f_df[(f_df['Valence'] > 0.4) & (f_df['Valence'] < 0.6) & (f_df['Energy'] < 0.6)]
-        elif mood_choice == "Workout": f_df = f_df[(f_df['Energy'] > 0.7) & (f_df['Tempo'] > 115)]
-        elif mood_choice == "Party": f_df = f_df[(f_df['Danceability'] > 0.7) & (f_df['Energy'] > 0.7)]
-        elif mood_choice == "Focus": f_df = f_df[(f_df['Instrumentalness'] > 0.4) | (f_df['Energy'] < 0.5)]
-        elif mood_choice == "Chill": f_df = f_df[(f_df['Energy'] < 0.4) & (f_df['Loudness'] < -10)]
-        elif mood_choice == "Dance": f_df = f_df[(f_df['Danceability'] > 0.8)]
-
-        # Statistics
-        st.metric(label="Songs Found", value=len(f_df))
+        st.metric(label="Songs Found", value=len(filtered_df))
         st.write("---")
 
-        # Results
-        if f_df.empty:
-            st.warning("No songs found.")
+        if filtered_df.empty:
+            st.warning("No songs found for this selection.")
         else:
-            recs = f_df.reset_index(drop=True)
-            show_now = min(st.session_state.display_count, len(recs))
+            recs = filtered_df.reset_index(drop=True)
+            show_now = min(st.session_state.display_limit, len(recs))
             
             for i in range(show_now):
                 row = recs.iloc[i]
                 st.markdown(f"""
                     <div class="song-card">
                         <div style="font-weight: 800; font-size: 1.4rem; color: #1DB954;">{row['SongName']}</div>
-                        <div style="color: {C_SUB} !important; font-size: 1.1rem; margin-top: 5px;">{row['ArtistName']}</div>
-                        <div style="margin-top: 15px;">
+                        <div style="opacity: 0.6; font-size: 1.1rem; margin-top: 5px;">{row['ArtistName']}</div>
+                        <div style="margin-top: 12px;">
                             <span style="background: rgba(29, 185, 84, 0.2); color: #1DB954; padding: 5px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">🔥 {row['Popularity']}% Trending</span>
                         </div>
                     </div>
@@ -230,19 +190,19 @@ try:
 
             if show_now < len(recs):
                 if st.button("⬇️ Show More Songs", use_container_width=True):
-                    st.session_state.display_count += 20
+                    st.session_state.display_limit += 20
                     st.rerun()
 
-        # --- TEAM FOOTER ---
+        # Final Branding & Team Credits
         st.markdown(f"""
             <div class="footer-container">
-                <p style="color: {C_SUB} !important; font-size: 0.8rem; letter-spacing: 4px; margin-bottom: 12px;">DEVELOPED BY</p>
-                <div class="footer-names">
+                <p style="color: rgba(255,255,255,0.4); font-size: 0.8rem; letter-spacing: 4px; margin-bottom: 12px;">DEVELOPED BY</p>
+                <div style="font-weight: 300; letter-spacing: 5px; text-transform: uppercase; font-size: 1.2rem; background: linear-gradient(to right, #667eea, #ff4e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                     Buddhadeb • Arghadeep • Sanajit • Kamalakanta
                 </div>
-                <p style="color: {C_SUB} !important; font-size: 0.75rem; margin-top: 25px; opacity: 0.5;">© 2026 MOODTUNES PROJECT</p>
+                <p style="color: rgba(255,255,255,0.2); font-size: 0.75rem; margin-top: 25px;">© 2026 MOODTUNES PROJECT • CSE DEPARTMENT</p>
             </div>
         """, unsafe_allow_html=True)
 
 except Exception as e:
-    st.error(f"Error: {e}")
+    st.error(f"System Error: {e}")
