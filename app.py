@@ -13,55 +13,61 @@ if 'app_theme' not in st.session_state:
 if 'display_count' not in st.session_state: 
     st.session_state.display_count = 20
 
-# --- 2. TOP NAVIGATION (Mobile Optimized Top-Right Settings) ---
-t_col1, t_col2 = st.columns([5, 1.2])
-
-with t_col1:
-    st.title("🎵 Music Recommendation System")
-
-with t_col2:
-    # Placed in top right
-    with st.popover("⚙️ Settings", use_container_width=True):
-        st.markdown("### Appearance")
-        theme_choice = st.selectbox(
-            "Select Theme", ["Dark", "Light", "System Default"], 
-            index=0 if st.session_state.app_theme == "Dark" else 1
-        )
-        if theme_choice != st.session_state.app_theme:
-            st.session_state.app_theme = theme_choice
-            st.rerun()
-
-# --- 3. DYNAMIC THEME COLOR ENGINE ---
+# --- 2. DYNAMIC THEME COLOR ENGINE ---
 if st.session_state.app_theme == "Dark":
     main_bg = "#0e1117"
     text_main = "#FFFFFF"
     card_bg = "rgba(255, 255, 255, 0.05)"
     border_color = "rgba(255, 255, 255, 0.1)"
     sub_text = "rgba(255, 255, 255, 0.6)"
-    metric_color = "#1DB954"
+    btn_bg = "#1DB954"
+    btn_text = "#FFFFFF"
+    input_fill = "rgba(255, 255, 255, 0.05)"
 elif st.session_state.app_theme == "Light":
     main_bg = "#FFFFFF"
     text_main = "#121212"
-    card_bg = "rgba(0, 0, 0, 0.03)"
+    card_bg = "rgba(0, 0, 0, 0.04)"
     border_color = "rgba(0, 0, 0, 0.1)"
     sub_text = "rgba(0, 0, 0, 0.6)"
-    metric_color = "#1aa34a"
+    btn_bg = "#1aa34a"  # Brighter green for light mode
+    btn_text = "#FFFFFF"
+    input_fill = "#f0f2f6"
 else: # System Default
     main_bg = "transparent"
     text_main = "inherit"
     card_bg = "rgba(128, 128, 128, 0.05)"
     border_color = "rgba(128, 128, 128, 0.1)"
     sub_text = "gray"
-    metric_color = "#1DB954"
+    btn_bg = "#1DB954"
+    btn_text = "#FFFFFF"
+    input_fill = "rgba(128, 128, 128, 0.05)"
 
-# --- 4. THE MASTER CSS (Flawless Design) ---
+# --- 3. TOP NAVIGATION (Settings Top-Right) ---
+t_col1, t_col2 = st.columns([5, 1.2])
+
+with t_col1:
+    st.title("🎵 Music Recommendation System")
+
+with t_col2:
+    with st.popover("⚙️ Settings", use_container_width=True):
+        st.markdown(f"<h3 style='color: {text_main};'>Appearance</h3>", unsafe_allow_html=True)
+        theme_choice = st.selectbox(
+            "Select Theme", ["Dark", "Light", "System Default"], 
+            index=0 if st.session_state.app_theme == "Dark" else 1,
+            key="theme_selector"
+        )
+        if theme_choice != st.session_state.app_theme:
+            st.session_state.app_theme = theme_choice
+            st.rerun()
+
+# --- 4. THE MASTER CSS (Adaptive & Flawless) ---
 st.markdown(f"""
     <style>
     header {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     .stAppDeployButton {{display:none !important;}}
 
-    /* ADAPTIVE BACKGROUND & TEXT */
+    /* ADAPTIVE BACKGROUND */
     [data-testid="stAppViewContainer"] {{
         background-color: {main_bg};
         background-image: 
@@ -80,39 +86,53 @@ st.markdown(f"""
         100% {{ background-position: 0% 50%; }}
     }}
 
-    /* FORCE ALL HEADERS TO BE VISIBLE */
-    h1, h2, h3, p, span, label, .stMetric div {{
+    /* FORCE ALL TEXT & UI ELEMENTS TO ADAPT */
+    h1, h2, h3, p, span, label, .stMetric div, [data-testid="stMarkdownContainer"] p {{
         color: {text_main} !important;
     }}
 
-    /* SEARCH INPUT FIX */
+    /* SEARCH INPUT - FULLY ADAPTIVE */
     .stTextInput input {{ 
         border-radius: 15px; border: 1px solid {border_color}; 
-        padding: 12px; background: {card_bg} !important;
+        padding: 12px; background: {input_fill} !important;
         color: {text_main} !important; font-size: 16px !important;
     }}
 
-    /* MOOD SELECTOR (Fixing the double-label and wrap bug) */
+    /* PLAY BUTTONS - STYLISH & CONSISTENT */
+    .stButton button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border-radius: 12px !important;
+        border: none !important;
+        font-weight: bold !important;
+        transition: 0.3s !important;
+    }}
+    .stButton button:hover {{
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+    }}
+
+    /* SETTINGS POPOVER & SELECTBOX ADAPTATION */
+    div[data-testid="stPopoverContent"] {{
+        background-color: {main_bg} !important;
+        border: 1px solid {border_color} !important;
+    }}
+    
+    /* MOOD SELECTOR */
     div[role="radiogroup"] {{ 
         display: flex; flex-wrap: wrap !important; gap: 8px; margin-top: 10px; 
     }}
-    
     div[role="radiogroup"] label {{
-        padding: 0px 15px;
-        min-width: 110px; height: 48px; display: flex; align-items: center; justify-content: center;
+        padding: 0px 15px; min-width: 110px; height: 48px; 
+        display: flex; align-items: center; justify-content: center;
         border-radius: 12px; font-weight: 700; color: white !important; cursor: pointer; 
         transition: 0.3s ease;
     }}
 
-    /* Hide the default radio circle */
-    div[role="radiogroup"] label div[data-testid="stMarkdownContainer"] p {{
-        font-size: 0.85rem !important; margin: 0; padding: 0;
-    }}
-    
-    /* GORGEOUS MOOD GRADIENTS */
+    /* MOOD GRADIENTS */
     div[role="radiogroup"] label:nth-of-type(1) {{ background: linear-gradient(135deg, #667eea, #764ba2); }} 
     div[role="radiogroup"] label:nth-of-type(2) {{ background: linear-gradient(135deg, #2b5876, #4e4376); }} 
-    div[role="radiogroup"] label:nth-of-type(3) {{ background: linear-gradient(135deg, #ff4e50, #f9d423); }} /* Proper Romantic */
+    div[role="radiogroup"] label:nth-of-type(3) {{ background: linear-gradient(135deg, #ff4e50, #f9d423); }} 
     div[role="radiogroup"] label:nth-of-type(4) {{ background: linear-gradient(135deg, #0ba360, #3cba92); }} 
     div[role="radiogroup"] label:nth-of-type(5) {{ background: linear-gradient(135deg, #FF512F, #DD2476); }} 
     div[role="radiogroup"] label:nth-of-type(6) {{ background: linear-gradient(135deg, #4b6cb7, #182848); }} 
@@ -158,12 +178,11 @@ try:
     if df.empty:
         st.error("⚠️ Dataset not found.")
     else:
-        # Search Box
         search_query = st.text_input("Search", "", placeholder="🔍 Search track or artist...", label_visibility="collapsed")
         
         st.write("### ✨ Match your Mood")
-        # Fix: Using the exact words as the options to stop the repeating bug
-        mood_choices = ["Everything", "Sad", "Romantic", "Workout", "Party", "Focus", "Chill", "Dance"]
+        # Changed "Everything" to "All Songs"
+        mood_choices = ["All Songs", "Sad", "Romantic", "Workout", "Party", "Focus", "Chill", "Dance"]
         mood_choice = st.radio("Mood Selector:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
         # Logic
