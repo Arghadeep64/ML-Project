@@ -4,61 +4,51 @@ import numpy as np
 import os
 import urllib.parse
 
-# --- MASTERPIECE UI CONFIG ---
+# --- MOBILE-OPTIMIZED UI CONFIG ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
 
-# 1. SETTINGS & STATE INITIALIZATION
+# 1. STATE INITIALIZATION
 if 'app_theme' not in st.session_state: st.session_state.app_theme = "Dark"
-if 'bg_animation' not in st.session_state: st.session_state.bg_animation = True
 if 'display_count' not in st.session_state: st.session_state.display_count = 20
-if 'card_opacity' not in st.session_state: st.session_state.card_opacity = 0.08
 
-# --- TOP NAVIGATION BAR (Settings Button on Top Right) ---
-t_col1, t_col2 = st.columns([5, 1])
+# --- TOP NAVIGATION (Mobile Optimized Top-Right Settings) ---
+# We use a 4:1 ratio to ensure the button stays on the right even on small screens
+t_col1, t_col2 = st.columns([4, 1])
+
+with t_col1:
+    st.title("🎵 Music Recommendation System")
 
 with t_col2:
+    # Popover acts as a sleek modern menu
     with st.popover("⚙️ Settings", use_container_width=True):
-        st.markdown("### 🛠️ App Controls")
-        
-        # Theme Toggle
+        st.markdown("### 🛠️ App Appearance")
         theme_choice = st.selectbox(
             "Appearance", ["Dark", "Light", "System Default"], 
             index=0 if st.session_state.app_theme == "Dark" else 1
         )
         st.session_state.app_theme = theme_choice
-        
-        # Animation Toggle
-        st.session_state.bg_animation = st.toggle("Enable Background Motion", value=True)
-        
-        # Results per load
-        st.session_state.display_count = st.select_slider(
-            "Songs per load", options=[10, 20, 50, 100], value=20
-        )
-        
-        # Card Transparency
-        st.session_state.card_opacity = st.slider("Glass Transparency", 0.01, 0.20, 0.08)
+
+st.markdown("<p style='opacity: 0.8; font-size: 1.1rem; font-weight: 300; margin-top: -15px;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
 
 # 2. DYNAMIC THEME ENGINE
 if st.session_state.app_theme == "Dark":
     bg_color, text_color, input_bg = "rgba(10, 10, 10, 1)", "#FFFFFF", "rgba(255, 255, 255, 0.05)"
     glass_border = "rgba(255, 255, 255, 0.1)"
 elif st.session_state.app_theme == "Light":
-    bg_color, text_color, input_bg = "#f0f2f6", "#000000", "rgba(255, 255, 255, 0.8)"
+    bg_color, text_color, input_bg = "#f8f9fa", "#000000", "rgba(255, 255, 255, 0.9)"
     glass_border = "rgba(0, 0, 0, 0.1)"
 else: # System
     bg_color, text_color, input_bg = "transparent", "inherit", "rgba(128, 128, 128, 0.05)"
     glass_border = "rgba(128, 128, 128, 0.1)"
 
-# 3. ADVANCED CSS
-anim_css = "animation: gradientMove 15s ease infinite;" if st.session_state.bg_animation else ""
-
+# 3. FLAWLESS CSS (Background Motion Enabled by Default)
 st.markdown(f"""
     <style>
     header {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     .stAppDeployButton {{display:none !important;}}
 
-    /* MODERN SMOOTH BACKGROUND */
+    /* MODERN SMOOTH BACKGROUND WITH PERMANENT MOTION */
     [data-testid="stAppViewContainer"] {{
         background-color: {bg_color};
         background-image: 
@@ -66,7 +56,7 @@ st.markdown(f"""
             radial-gradient(circle at 85% 85%, rgba(221, 36, 118, 0.12) 0%, transparent 40%),
             radial-gradient(rgba(128, 128, 128, 0.05) 1.5px, transparent 1.5px);
         background-size: 400% 400%;
-        {anim_css}
+        animation: gradientMove 15s ease infinite;
         background-attachment: fixed;
         color: {text_color};
     }}
@@ -77,23 +67,29 @@ st.markdown(f"""
         100% {{ background-position: 0% 50%; }}
     }}
 
+    /* MOBILE OPTIMIZED INPUTS */
     .stTextInput input {{ 
-        border-radius: 20px; 
+        border-radius: 15px; 
         border: 1px solid rgba(128,128,128,0.2); 
-        padding: 15px; 
+        padding: 12px; 
         background: {input_bg} !important;
         backdrop-filter: blur(10px);
         color: {text_color} !important;
+        font-size: 16px !important; /* Prevents auto-zoom on iOS */
     }}
     
-    div[role="radiogroup"] {{ display: flex; flex-wrap: wrap !important; justify-content: center; gap: 10px; margin-top: 15px; }}
-    div[role="radiogroup"] > label > div [data-testid="stMarkdownContainer"] {{ display: none; }}
-    div[role="radiogroup"] [data-testid="stWidgetLabel"] {{ display: none; }}
-    div[role="radiogroup"] label p {{ display: none; }}
+    div[role="radiogroup"] {{ 
+        display: flex; 
+        flex-wrap: wrap !important; 
+        justify-content: flex-start; 
+        gap: 8px; 
+        margin-top: 10px; 
+    }}
     
     div[role="radiogroup"] label {{
-        flex: 1; min-width: 120px; height: 50px; display: flex; align-items: center; justify-content: center;
-        border-radius: 15px; font-weight: 800; color: white !important; cursor: pointer; transition: 0.4s;
+        flex: 1; min-width: 100px; height: 45px; display: flex; align-items: center; justify-content: center;
+        border-radius: 12px; font-weight: 700; color: white !important; cursor: pointer; 
+        transition: 0.3s ease; font-size: 0.85rem !important;
     }}
     
     /* GORGEOUS MOOD GRADIENTS */
@@ -115,24 +111,25 @@ st.markdown(f"""
     div[role="radiogroup"] label:nth-of-type(7)::after {{ content: "Chill"; }}
     div[role="radiogroup"] label:nth-of-type(8)::after {{ content: "Dance"; }}
 
-    div[role="radiogroup"] [data-checked="true"] + div {{ transform: scale(1.1); border: 3px solid white !important; box-shadow: 0 0 20px rgba(255,255,255,0.2); }}
+    div[role="radiogroup"] [data-checked="true"] + div {{ transform: scale(1.05); border: 2px solid white !important; box-shadow: 0 0 15px rgba(255,255,255,0.2); }}
 
+    /* FLAWLESS GLASS CARDS */
     .song-card {{
-        padding: 30px; border-radius: 25px;
-        background: rgba(128, 128, 128, {st.session_state.card_opacity}); 
-        backdrop-filter: blur(20px);
+        padding: 20px; border-radius: 20px;
+        background: rgba(128, 128, 128, 0.1); 
+        backdrop-filter: blur(15px);
         border: 1px solid {glass_border}; 
         margin-bottom: 10px;
-        transition: 0.4s ease;
+        transition: 0.3s ease;
     }}
-    .song-card:hover {{ transform: translateY(-5px); border-color: #1DB954; }}
+    .song-card:hover {{ border-color: #1DB954; }}
 
     .footer-container {{
-        margin-top: 100px; padding: 60px; text-align: center;
+        margin-top: 80px; padding: 40px; text-align: center;
         border-top: 1px solid rgba(128, 128, 128, 0.1);
     }}
     .footer-names {{
-        font-weight: 300; letter-spacing: 5px; text-transform: uppercase; font-size: 1.3rem;
+        font-weight: 300; letter-spacing: 4px; text-transform: uppercase; font-size: 1.1rem;
         background: linear-gradient(to right, #667eea, #ff0844);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }}
@@ -146,27 +143,20 @@ def load_data():
         return pd.read_csv('SpotifySongs.csv')
     return pd.DataFrame()
 
-# --- APP LAYOUT ---
-with t_col1:
-    st.title("🎵 Music Recommendation System")
-    st.markdown("<p style='opacity: 0.8; font-size: 1.2rem; font-weight: 300;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
-
 try:
     df = load_data()
     if df.empty:
         st.error("⚠️ Dataset not found.")
     else:
         # Search Box
-        c1, c2, c3 = st.columns([1, 2, 1])
-        with c2:
-            search_query = st.text_input("Search", "", placeholder="🔍 Search track or artist...", label_visibility="collapsed")
+        search_query = st.text_input("Search", "", placeholder="🔍 Search track or artist...", label_visibility="collapsed")
         
         # Mood Selection
         mood_choices = ["All", "Sad", "Romantic", "Gym", "Party", "Study", "Chill", "Dance"]
         st.write("### ✨ Match your Mood")
         mood_choice = st.radio("Mood Selector:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
-        # --- LOGIC (UNTOUCHED) ---
+        # --- LOGIC ---
         f_df = df.copy()
         if search_query.strip():
             q = search_query.strip().lower()
@@ -195,10 +185,10 @@ try:
                 row = recs.iloc[i]
                 st.markdown(f"""
                     <div class="song-card">
-                        <div style="font-weight: 900; font-size: 1.5rem; color: #1DB954;">{row['SongName']}</div>
-                        <div style="opacity: 0.6; font-size: 1.1rem; margin-top: 5px;">{row['ArtistName']}</div>
-                        <div style="margin-top: 15px;">
-                            <span style="background: rgba(29, 185, 84, 0.2); padding: 5px 15px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">🔥 {row['Popularity']}% Trending</span>
+                        <div style="font-weight: 800; font-size: 1.3rem; color: #1DB954;">{row['SongName']}</div>
+                        <div style="opacity: 0.7; font-size: 1rem; margin-top: 5px;">{row['ArtistName']}</div>
+                        <div style="margin-top: 12px;">
+                            <span style="background: rgba(29, 185, 84, 0.2); padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold;">🔥 {row['Popularity']}% Trending</span>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
@@ -214,11 +204,11 @@ try:
         # --- TEAM FOOTER ---
         st.markdown(f"""
             <div class="footer-container">
-                <p style="color: grey; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 15px;">DEVELOPED BY</p>
+                <p style="color: grey; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px;">DEVELOPED BY</p>
                 <div class="footer-names">
                     Buddhadeb • Arghadeep • Sanajit • Kamalakanta
                 </div>
-                <p style="color: grey; font-size: 0.7rem; margin-top: 25px; opacity: 0.5;">© 2026 MOODTUNES PROJECT</p>
+                <p style="color: grey; font-size: 0.7rem; margin-top: 20px; opacity: 0.5;">© 2026 MOODTUNES PROJECT</p>
             </div>
         """, unsafe_allow_html=True)
 
