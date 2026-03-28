@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import os
 
 # --- AESTHETIC MASTERPIECE UI ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
@@ -76,7 +77,9 @@ st.markdown("""
 
 @st.cache_data
 def load_data():
-    return pd.read_csv('SpotifySongs.csv')
+    if os.path.exists('SpotifySongs.csv'):
+        return pd.read_csv('SpotifySongs.csv')
+    return pd.DataFrame()
 
 if 'display_count' not in st.session_state:
     st.session_state.display_count = 20
@@ -93,81 +96,73 @@ with col_s:
 
 try:
     df = load_data()
-    mood_choices = ["All", "Sad", "Romantic", "Gym", "Party", "Study"]
-    
-    st.write("### ✨ Pick Your Vibe")
-    mood_choice = st.radio("Mood:", options=mood_choices, horizontal=True, label_visibility="collapsed")
-
-    # --- ADVANCED FILTERING LOGIC ---
-    f_df = df.copy()
-    
-    # 1. Search Filter
-    if search_query.strip():
-        q = search_query.strip().lower()
-        f_df = f_df[f_df['SongName'].astype(str).str.lower().str.contains(q, na=False) | 
-                    f_df['ArtistName'].astype(str).str.lower().str.contains(q, na=False)]
-
-    # 2. Vibe-Based ML Filtering
-    if mood_choice == "Sad": 
-        f_df = f_df[(f_df['Valence'] < 0.4) | (f_df['Acousticness'] > 0.6)]
-    elif mood_choice == "Romantic": 
-        f_df = f_df[(f_df['Valence'] > 0.35) & (f_df['Valence'] < 0.65) & (f_df['Energy'] < 0.6)]
-    elif mood_choice == "Gym": 
-        f_df = f_df[(f_df['Energy'] > 0.75) & (f_df['Tempo'] > 120)]
-    elif mood_choice == "Party": 
-        f_df = f_df[(f_df['Danceability'] > 0.75) & (f_df['Energy'] > 0.7)]
-    elif mood_choice == "Study": 
-        f_df = f_df[(f_df['Instrumentalness'] > 0.45) | (f_df['Energy'] < 0.45)]
-
-    # --- TRACK COUNTER (NEW FEATURE) ---
-    col_stat1, col_stat2 = st.columns(2)
-    with col_stat1:
-        st.metric(label="Tracks Detected", value=len(f_df))
-    with col_stat2:
-        if not f_df.empty:
-            avg_pop = int(f_df['Popularity'].mean())
-            st.metric(label="Average Vibe Popularity", value=f"{avg_pop}%")
-
-    st.write("---")
-
-    # --- RESULTS ---
-    if f_df.empty:
-        st.warning("No matches found for this specific filter.")
+    if df.empty:
+        st.error("⚠️ Dataset not found. Please upload 'SpotifySongs.csv' to your GitHub folder.")
     else:
-        recs = f_df.reset_index(drop=True)
-        show_now = min(st.session_state.display_count, len(recs))
-        
-        for i in range(show_now):
-            row = recs.iloc[i]
-            st.markdown(f"""
-                <div class="song-card">
-                    <div style="font-weight: 800; font-size: 1.2rem; color: #1DB954;">{row['SongName']}</div>
-                    <div style="opacity: 0.7; font-size: 0.9rem;">{row['ArtistName']}</div>
-                    <div style="margin-top: 10px;">
-                        <span style="background: rgba(29, 185, 84, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">🔥 {row['Popularity']}% Popular</span>
-                        <span style="background: rgba(102, 126, 234, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">🎹 {int(row['Acousticness']*100)}% Acoustic</span>
+        mood_choices = ["All", "Sad", "Romantic", "Gym", "Party", "Study"]
+        st.write("### ✨ Pick Your Vibe")
+        mood_choice = st.radio("Mood:", options=mood_choices, horizontal=True, label_visibility="collapsed")
+
+        # --- FILTERING LOGIC ---
+        f_df = df.copy()
+        if search_query.strip():
+            q = search_query.strip().lower()
+            f_df = f_df[f_df['SongName'].astype(str).str.lower().str.contains(q, na=False) | 
+                        f_df['ArtistName'].astype(str).str.lower().str.contains(q, na=False)]
+
+        if mood_choice == "Sad": 
+            f_df = f_df[(f_df['Valence'] < 0.4) | (f_df['Acousticness'] > 0.6)]
+        elif mood_choice == "Romantic": 
+            f_df = f_df[(f_df['Valence'] > 0.35) & (f_df['Valence'] < 0.65) & (f_df['Energy'] < 0.6)]
+        elif mood_choice == "Gym": 
+            f_df = f_df[(f_df['Energy'] > 0.75) & (f_df['Tempo'] > 120)]
+        elif mood_choice == "Party": 
+            f_df = f_df[(f_df['Danceability'] > 0.75) & (f_df['Energy'] > 0.7)]
+        elif mood_choice == "Study": 
+            f_df = f_df[(f_df['Instrumentalness'] > 0.45) | (f_df['Energy'] < 0.45)]
+
+        # --- TRACK COUNTER ---
+        st.metric(label="Tracks Detected", value=len(f_df))
+        st.write("---")
+
+        # --- RESULTS ---
+        if f_df.empty:
+            st.warning("No matches found for this filter.")
+        else:
+            recs = f_df.reset_index(drop=True)
+            show_now = min(st.session_state.display_count, len(recs))
+            
+            for i in range(show_now):
+                row = recs.iloc[i]
+                st.markdown(f"""
+                    <div class="song-card">
+                        <div style="font-weight: 800; font-size: 1.2rem; color: #1DB954;">{row['SongName']}</div>
+                        <div style="opacity: 0.7; font-size: 0.9rem;">{row['ArtistName']}</div>
+                        <div style="margin-top: 10px;">
+                            <span style="background: rgba(29, 185, 84, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">🔥 {row['Popularity']}% Popular</span>
+                            <span style="background: rgba(102, 126, 234, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">🎹 {int(row['Acousticness']*100)}% Acoustic</span>
+                        </div>
                     </div>
+                """, unsafe_allow_html=True)
+                u = f"https://open.spotify.com/search/{row['SongName'].replace(' ', '%20')}%20{row['ArtistName'].replace(' ', '%20')}"
+                st.link_button(f"▶️ Play Track", u, use_container_width=True)
+                st.write("")
+
+            if show_now < len(recs):
+                if st.button("⬇️ Load More Recommendations", use_container_width=True):
+                    st.session_state.display_count += 20
+                    st.rerun()
+
+        # --- CREATIVE FOOTER ---
+        st.markdown(f"""
+            <div class="footer-container">
+                <p style="color: grey; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px;">PROUDLY DEVELOPED BY</p>
+                <div class="footer-names">
+                    Buddhadeb • Arghadeep • Sanajit • Kamalakanta
                 </div>
-            """, unsafe_allow_html=True)
-            u = f"https://open.spotify.com/search/{row['SongName'].replace(' ', '%20')}%20{row['ArtistName'].replace(' ', '%20')}"
-            st.link_button(f"▶️ Play on Spotify", u, use_container_width=True)
-            st.write("")
-
-        if show_now < len(recs):
-            if st.button("⬇️ Load More Recommendations", use_container_width=True):
-                st.session_state.display_count += 20
-                st.rerun()
-
-    # --- CREATIVE FOOTER ---
-    st.markdown(f"""
-        <div class="footer-container">
-            <p style="color: grey; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px;">PROUDLY DEVELOPED BY</p>
-            <div class="footer-names">
-                Buddhadeb • Arghadeep • Sanajit • Kamalakanta
+                <p style="color: grey; font-size: 0.7rem; margin-top: 20px;">© 2026 MoodTunes Project • CSE Dept</p>
             </div>
-            <p style="color: grey; font-size: 0.7rem; margin-top: 20px;">© 2026 MoodTunes Project • CSE Dept</p>
-        </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
 except Exception as e:
     st.error(f"Logic Error: {e}")
