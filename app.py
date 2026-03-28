@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 
-# --- AESTHETIC MASTERPIECE UI ---
+# --- MINIMALIST AESTHETIC UI ---
 st.set_page_config(page_title="Music Recommendation System", layout="wide")
 
 st.markdown("""
@@ -88,7 +88,7 @@ if 'display_count' not in st.session_state:
 col_t, col_s = st.columns([2.5, 1.5])
 with col_t:
     st.title("🎵 Music Recommendation System")
-    st.caption("Advanced ML-based discovery engine")
+    st.caption("A streamlined discovery engine")
 
 with col_s:
     st.write("")
@@ -100,7 +100,7 @@ try:
         st.error("⚠️ Dataset not found. Please upload 'SpotifySongs.csv' to your GitHub folder.")
     else:
         mood_choices = ["All", "Sad", "Romantic", "Gym", "Party", "Study"]
-        st.write("### ✨ Pick Your Vibe")
+        st.write("### ✨ Select Your Vibe")
         mood_choice = st.radio("Mood:", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
         # --- FILTERING LOGIC ---
@@ -127,7 +127,7 @@ try:
 
         # --- RESULTS ---
         if f_df.empty:
-            st.warning("No matches found for this filter.")
+            st.warning("No matches found.")
         else:
             recs = f_df.reset_index(drop=True)
             show_now = min(st.session_state.display_count, len(recs))
@@ -136,14 +136,11 @@ try:
                 row = recs.iloc[i]
                 st.markdown(f"""
                     <div class="song-card">
-                        <div style="font-weight: 800; font-size: 1.2rem; color: #1DB954;">{row['SongName']}</div>
-                        <div style="opacity: 0.7; font-size: 0.9rem;">{row['ArtistName']}</div>
-                        <div style="margin-top: 10px;">
-                            <span style="background: rgba(29, 185, 84, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">🔥 {row['Popularity']}% Popular</span>
-                            <span style="background: rgba(102, 126, 234, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">🎹 {int(row['Acousticness']*100)}% Acoustic</span>
-                        </div>
+                        <div style="font-weight: 800; font-size: 1.3rem; color: #1DB954;">{row['SongName']}</div>
+                        <div style="opacity: 0.7; font-size: 1rem;">{row['ArtistName']}</div>
                     </div>
                 """, unsafe_allow_html=True)
+                # Official Spotify Link
                 u = f"https://open.spotify.com/search/{row['SongName'].replace(' ', '%20')}%20{row['ArtistName'].replace(' ', '%20')}"
                 st.link_button(f"▶️ Play Track", u, use_container_width=True)
                 st.write("")
@@ -153,7 +150,7 @@ try:
                     st.session_state.display_count += 20
                     st.rerun()
 
-        # --- CREATIVE FOOTER ---
+        # --- TEAM FOOTER ---
         st.markdown(f"""
             <div class="footer-container">
                 <p style="color: grey; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 10px;">PROUDLY DEVELOPED BY</p>
