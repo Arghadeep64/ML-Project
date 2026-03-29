@@ -4,21 +4,19 @@ import numpy as np
 import os
 import urllib.parse
 
-# --- 1. [TEAM MEMBER: ARGHADEEP] UI/UX DESIGN & CSS ARCHITECTURE ---
-# Responsibility: Crafting the visual identity, Dark Mode CSS, and Animations.
+# --- 1. [TEAM MEMBER: KAMALAKANTA BERA] UI DESIGN & SYSTEM INTEGRATION ---
+# Role: Integrator [cite: 3]
+# Responsibility: Designing the Streamlit UI and final system deployment.
 
 st.set_page_config(page_title="MoodTunes Music System", layout="wide")
 
-# Permanent Dark Mode CSS with Glassmorphism
 st.markdown("""
     <style>
-    /* HIDE STREAMLIT OVERLAYS */
     header {visibility: hidden;}
     footer {visibility: hidden;}
     .stAppDeployButton {display:none !important;}
     [data-testid="stAppToolbar"] {display: none !important;}
 
-    /* DARK THEME BASE */
     [data-testid="stAppViewContainer"] {
         background-color: #0e1117 !important;
         background-image: 
@@ -36,13 +34,11 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* TYPOGRAPHY */
     h1, h2, h3, p, span, label, .stMetric div {
         color: #FFFFFF !important;
         font-family: 'Inter', sans-serif;
     }
 
-    /* SEARCH INPUT */
     .stTextInput input { 
         border-radius: 15px !important; 
         border: 1px solid rgba(255, 255, 255, 0.1) !important; 
@@ -51,7 +47,6 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* PLAY BUTTONS (SPOTIFY STYLE) */
     [data-testid="stLinkButton"] a {
         background-color: #1DB954 !important;
         color: #FFFFFF !important;
@@ -68,7 +63,6 @@ st.markdown("""
         transform: scale(1.02);
     }
 
-    /* MOOD SELECTOR */
     div[role="radiogroup"] { display: flex; flex-wrap: wrap !important; gap: 8px; margin-top: 10px; }
     div[role="radiogroup"] label {
         padding: 0px 15px; min-width: 110px; height: 48px; 
@@ -79,7 +73,6 @@ st.markdown("""
         transform: scale(1.05); border: 2.5px solid white !important;
     }
 
-    /* SONG CARDS */
     .song-card {
         padding: 25px; border-radius: 20px;
         background: rgba(255, 255, 255, 0.04);
@@ -90,7 +83,6 @@ st.markdown("""
     }
     .song-card:hover { border-color: #1DB954; }
 
-    /* FOOTER */
     .footer-container {
         margin-top: 100px; padding: 50px; text-align: center;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -98,20 +90,23 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. [TEAM MEMBER: BUDDHADEB] DATA PROCESSING & CACHING ---
-# Responsibility: Handling the Spotify dataset, cleaning null values, and optimizing load times.
+# --- 2. [TEAM MEMBER: BUDDHADEB PAN] DATA COLLECTION & PREPARATION ---
+# Role: Data Collector [cite: 3]
+# Responsibility: Gathering the Spotify dataset (CSV) and preparing it for modeling.
 
 @st.cache_data
-def load_and_clean_data():
+def load_and_prepare_dataset():
     if os.path.exists('SpotifySongs.csv'):
+        # [SANAJIT SAHOO - Tester Task] Removing missing values [cite: 8]
         data = pd.read_csv('SpotifySongs.csv')
         return data.dropna()
     return pd.DataFrame()
 
-# --- 3. [TEAM MEMBER: SANAJIT] FEATURE ENGINEERING & MOOD LOGIC ---
-# Responsibility: Developing the algorithms that map audio features (Valence, Energy, Tempo) to human moods.
+# --- 3. [TEAM MEMBER: ARGHADEEP GHOSH] RECOMMENDATION MODEL BUILDER ---
+# Role: ML Builder [cite: 3]
+# Responsibility: Building the similarity logic and mood-based algorithms.
 
-def filter_by_mood(df, mood):
+def get_mood_recommendations(df, mood):
     if mood == "Sad": return df[df['Valence'] < 0.4]
     elif mood == "Romantic": return df[(df['Valence'] > 0.4) & (df['Valence'] < 0.6) & (df['Energy'] < 0.6)]
     elif mood == "Workout": return df[(df['Energy'] > 0.7) & (df['Tempo'] > 115)]
@@ -121,8 +116,9 @@ def filter_by_mood(df, mood):
     elif mood == "Dance": return df[df['Danceability'] > 0.8]
     return df
 
-# --- 4. [TEAM MEMBER: KAMALAKANTA] SYSTEM INTEGRATION & DEPLOYMENT ---
-# Responsibility: Managing state, implementing search functionality, and coordinating the final deployment.
+# --- 4. [TEAM MEMBER: SANAJIT SAHOO] TESTING & EVALUATION ---
+# Role: Tester [cite: 3]
+# Responsibility: Verifying accuracy and checking recommendation quality[cite: 3, 25, 34].
 
 if 'display_limit' not in st.session_state: st.session_state.display_limit = 20
 
@@ -130,17 +126,17 @@ st.title("🎵 Music Recommendation System")
 st.markdown("<p style='opacity: 0.7; font-size: 1.1rem; font-weight: 300; margin-top: -15px;'>Your mood deserves the perfect soundtrack.</p>", unsafe_allow_html=True)
 
 try:
-    df = load_and_clean_data()
+    df = load_and_prepare_dataset()
     if df.empty:
         st.error("⚠️ Dataset not found. Please upload 'SpotifySongs.csv'.")
     else:
-        # Search & Mood Section
+        # Search & Interaction (Integration by Kamalakanta)
         search_query = st.text_input("Search", "", placeholder="🔍 Search track or artist...", label_visibility="collapsed")
         
         st.write("### ✨ Match your Mood")
         mood_choices = ["All Songs", "Sad", "Romantic", "Workout", "Party", "Focus", "Chill", "Dance"]
         
-        # Mapping gradients to Moods (Arghadeep's CSS logic continues here)
+        # UI Styling (Integration by Kamalakanta)
         st.markdown("""
             <style>
             div[role="radiogroup"] label:nth-of-type(1) { background: linear-gradient(135deg, #667eea, #764ba2); } 
@@ -156,13 +152,14 @@ try:
         
         mood_choice = st.radio("Mood Selector", options=mood_choices, horizontal=True, label_visibility="collapsed")
 
-        # Filtering Logic
-        filtered_df = filter_by_mood(df, mood_choice)
+        # ML Recommendation Logic (by Arghadeep)
+        filtered_df = get_mood_recommendations(df, mood_choice)
         if search_query.strip():
             q = search_query.strip().lower()
             filtered_df = filtered_df[filtered_df['SongName'].astype(str).str.lower().str.contains(q, na=False) | 
                                     filtered_df['ArtistName'].astype(str).str.lower().str.contains(q, na=False)]
 
+        # Evaluation Statistics (by Sanajit)
         st.metric(label="Songs Found", value=len(filtered_df))
         st.write("---")
 
@@ -193,7 +190,7 @@ try:
                     st.session_state.display_limit += 20
                     st.rerun()
 
-        # Final Branding & Team Credits
+        # Final Branding & Presentation Footer (by Kamalakanta)
         st.markdown(f"""
             <div class="footer-container">
                 <p style="color: rgba(255,255,255,0.4); font-size: 0.8rem; letter-spacing: 4px; margin-bottom: 12px;">DEVELOPED BY</p>
