@@ -3,6 +3,11 @@ import pandas as pd
 import numpy as np
 import os
 import urllib.parse
+from pathlib import Path
+from sklearn.cluster import KMeans
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_PATH = BASE_DIR / 'SpotifySongs.csv'
 
 # --- 1. [TEAM MEMBER: KAMALAKANTA BERA] UI DESIGN & SYSTEM INTEGRATION ---
 # Role: Integrator
@@ -40,18 +45,37 @@ st.markdown("""
     }
 
     /* FIX: Robust Search Input Styling */
-    .stTextInput input { 
-        border-radius: 15px !important; 
-        border: 1px solid rgba(255, 255, 255, 0.1) !important; 
-        padding: 12px !important; 
-        background-color: rgba(255, 255, 255, 0.05) !important;
+    .stTextInput input,
+    .stTextInput input:focus,
+    .stTextInput input:-webkit-autofill {
+        border-radius: 15px !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        padding: 12px !important;
+        background-color: rgba(0, 0, 0, 0.35) !important;
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+    .stTextInput input::selection {
+        background: rgba(29, 185, 84, 0.35) !important;
         color: #FFFFFF !important;
     }
     
     .stTextInput input:focus {
         border-color: #1DB954 !important;
-        background-color: rgba(255, 255, 255, 0.1) !important;
+        background-color: rgba(0, 0, 0, 0.45) !important;
         box-shadow: 0 0 0 1px #1DB954 !important;
+    }
+
+    .stTextInput input:-webkit-autofill {
+        color: #FFFFFF !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+
+    .stTextInput input::selection {
+        background: rgba(29, 185, 84, 0.35) !important;
+        color: #FFFFFF !important;
     }
 
     /* FIX: Show More Button Specific Styling */
@@ -120,23 +144,105 @@ st.markdown("""
 
 @st.cache_data
 def load_and_prepare_dataset():
-    if os.path.exists('SpotifySongs.csv'):
-        data = pd.read_csv('SpotifySongs.csv')
+    if DATA_PATH.exists():
+        data = pd.read_csv(DATA_PATH)
         return data.dropna()
     return pd.DataFrame()
+
+@st.cache_data
+def cluster_songs_and_assign_moods(df):
+    if df.empty:
+        return df, {}
+    
+    # Features for clustering
+    features = ['Popularity', 'Danceability', 'Energy', 'Loudness', 'Speechiness', 
+                'Acousticness', 'Instrumentalness', 'Liveness', 'Valence', 'Tempo', 'Duration_ms']
+    
+    # Standardize features
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(df[features])
+    
+    # K-Means clustering into 8 clusters (for 8 moods)
+    kmeans = KMeans(n_clusters=8, random_state=42, n_init=10)
+    df = df.copy()
+    df['cluster'] = kmeans.fit_predict(scaled_features)
+    
+    # Assign moods based on cluster centroids with a unique mapping
+    centroids = kmeans.cluster_centers_
+    mood_labels = ["Sad", "Romantic", "Workout", "Focus", "Chill", "Dance", "Party"]
+    cluster_moods = {}
+    assigned_clusters = set()
+
+    def mood_score(cluster_features, mood):
+        valence = cluster_features['Valence']
+        energy = cluster_features['Energy']
+        danceability = cluster_features['Danceability']
+        acousticness = cluster_features['Acousticness']
+        instrumentalness = cluster_features['Instrumentalness']
+        loudness = cluster_features['Loudness']
+
+        if mood == "Sad":
+            return -valence * 1.0 + -energy * 0.9 + -loudness * 0.4
+        if mood == "Romantic":
+            return valence * 1.0 + -energy * 0.6 + -loudness * 0.4 + (0.4 - danceability)
+        if mood == "Workout":
+            return energy * 1.1 + loudness * 0.7 + danceability * 0.5
+        if mood == "Focus":
+            return acousticness * 0.9 + instrumentalness * 1.0 - energy * 0.3
+        if mood == "Chill":
+            return -energy * 0.9 + -loudness * 0.7 + acousticness * 0.3
+        if mood == "Dance":
+            return danceability * 1.2 + energy * 0.5
+        if mood == "Party":
+            return danceability * 0.9 + energy * 0.9 + valence * 0.7
+        return 0.0
+
+    cluster_features = []
+    for i in range(8):
+        centroid = centroids[i]
+        cluster_features.append({
+            'cluster': i,
+            'Valence': centroid[features.index('Valence')],
+            'Energy': centroid[features.index('Energy')],
+            'Danceability': centroid[features.index('Danceability')],
+            'Acousticness': centroid[features.index('Acousticness')],
+            'Instrumentalness': centroid[features.index('Instrumentalness')],
+            'Loudness': centroid[features.index('Loudness')],
+        })
+
+    for mood in mood_labels:
+        best_cluster = None
+        best_score = None
+        for cluster in cluster_features:
+            if cluster['cluster'] in assigned_clusters:
+                continue
+            score = mood_score(cluster, mood)
+            if best_cluster is None or score > best_score:
+                best_cluster = cluster['cluster']
+                best_score = score
+        if best_cluster is not None:
+            cluster_moods[best_cluster] = mood
+            assigned_clusters.add(best_cluster)
+
+    # Assign any remaining cluster to Chill as a fallback
+    for cluster in range(8):
+        if cluster not in assigned_clusters:
+            cluster_moods[cluster] = "Chill"
+
+    return df, cluster_moods
 
 # --- 3. [TEAM MEMBER: ARGHADEEP GHOSH] RECOMMENDATION MODEL BUILDER ---
 # Role: ML Builder
 # Responsibility: Building the similarity logic and mood-based algorithms.
 
-def get_mood_recommendations(df, mood):
-    if mood == "Sad": return df[df['Valence'] < 0.4]
-    elif mood == "Romantic": return df[(df['Valence'] > 0.4) & (df['Valence'] < 0.6) & (df['Energy'] < 0.6)]
-    elif mood == "Workout": return df[(df['Energy'] > 0.7) & (df['Tempo'] > 115)]
-    elif mood == "Party": return df[(df['Danceability'] > 0.7) & (df['Energy'] > 0.7)]
-    elif mood == "Focus": return df[(df['Instrumentalness'] > 0.4) | (df['Energy'] < 0.5)]
-    elif mood == "Chill": return df[(df['Energy'] < 0.4) & (df['Loudness'] < -10)]
-    elif mood == "Dance": return df[df['Danceability'] > 0.8]
+def get_mood_recommendations(df, mood, cluster_moods):
+    if mood == "All Songs":
+        return df
+
+    cluster_ids = [cid for cid, m in cluster_moods.items() if m == mood]
+    if cluster_ids:
+        return df[df['cluster'].isin(cluster_ids)]
     return df
 
 # --- 4. [TEAM MEMBER: SANAJIT SAHOO] TESTING & EVALUATION ---
@@ -154,11 +260,13 @@ try:
     if df.empty:
         st.error("⚠️ Dataset not found. Please upload 'SpotifySongs.csv'.")
     else:
+        df, cluster_moods = cluster_songs_and_assign_moods(df)
+        
         # Search & Interaction
         search_query = st.text_input("Search", "", placeholder="🔍 Search track or artist...", label_visibility="collapsed")
         
         st.write("### ✨ Match your Mood")
-        mood_choices = ["All Songs", "Sad", "Romantic", "Workout", "Party", "Focus", "Chill", "Dance"]
+        mood_choices = ["All Songs", "Sad", "Romantic", "Workout", "Focus", "Chill", "Dance", "Party"]
         
         # UI Styling for Mood Buttons
         st.markdown("""
@@ -174,10 +282,10 @@ try:
             </style>
         """, unsafe_allow_html=True)
         
-        mood_choice = st.radio("Mood Selector", options=mood_choices, horizontal=True, label_visibility="collapsed")
+        mood_choice = st.radio("Mood Selector", options=mood_choices, index=0, horizontal=True, label_visibility="collapsed")
 
         # ML Recommendation Logic
-        filtered_df = get_mood_recommendations(df, mood_choice)
+        filtered_df = get_mood_recommendations(df, mood_choice, cluster_moods)
         if search_query.strip():
             q = search_query.strip().lower()
             filtered_df = filtered_df[filtered_df['SongName'].astype(str).str.lower().str.contains(q, na=False) | 
